@@ -5,7 +5,7 @@ https://brawl.kdking-tools.com/
 ブロスタのソロ・デュオショーダウンで、トロフィー帯ごとによく使われているキャラ（デュオはキャラの組み合わせも）を集計して表示するサイト。
 
 - `collect.py`: 公式APIのランキング上位とその対戦相手の battlelog からショーダウンの試合を集め、`data/battles.jsonl` に追記する
-- `build_data.py`: `data/battles.jsonl` から `site/data.json` を作る
+- `build_data.py`: `data/battles.jsonl` から直近30日分の `site/data.json` を作る（60日より古い試合は battles.jsonl から削除）
 - `site/`: 公開するページ（GitHub Pages）
 - `.github/workflows/update.yml`: 毎日 3:00 JST に収集 → 集計 → コミット → Pages へ公開
 
