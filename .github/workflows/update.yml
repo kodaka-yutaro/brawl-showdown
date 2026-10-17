@@ -1,0 +1,51 @@
+name: ショーダウンのデータ更新と公開
+
+on:
+  schedule:
+    - cron: "0 18 * * *"   # 毎日 3:00 JST
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["site/**"]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 試合データを集める
+        if: github.event_name != 'push'
+        env:
+          BRAWL_API_KEY: ${{ secrets.BRAWL_API_KEY }}
+        run: python3 collect.py --countries global,jp --max-players 400
+      - name: サイト用データを作る
+        run: if [ -f data/battles.jsonl ]; then python3 build_data.py; fi
+      - name: データをコミット
+        if: github.event_name != 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add data/battles.jsonl site/data.json
+          git diff --cached --quiet || git commit -m "データ更新 $(date -u +%Y-%m-%d)"
+          git push
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4
