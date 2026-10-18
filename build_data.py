@@ -23,7 +23,7 @@ ROOT = Path(__file__).parent
 JST = timezone(timedelta(hours=9))
 # ソロ・デュオのアカウントは キャラトロフィーがこの値以上のときだけ出す
 ACCOUNT_MIN = 3000
-# デュオの組み合わせのアカウントは、トロフィーに関係なくその組み合わせを期間中にこの回数以上使った人だけ出す
+# デュオの組み合わせのアカウントは、トロフィーに関係なく同じ2人でその組み合わせを期間中にこの回数以上使ったペアだけ出す
 PAIR_ACCOUNT_GAMES = 5
 # 使用数を数えるトロフィー帯の幅（ページの入力もこの刻み）
 BUCKET = 50
@@ -149,12 +149,11 @@ def main():
                 count["duo"][(mi, day, idx(p), band(p["trophies"]))] += 1
                 if (pi := pidx(p)) >= 0:
                     acc["duo"].append([mi, day, idx(p), pi, p["trophies"], place])
-            for side, p in enumerate((a, b)):
-                pair_games[(idx(a), idx(b), p["tag"])] += 1
-                pair_uses.append((mi, day, idx(a), idx(b), p, side, avg, place))
-    for mi, day, ia, ib, p, side, avg, place in pair_uses:
-        if pair_games[(ia, ib, p["tag"])] >= PAIR_ACCOUNT_GAMES:
-            acc["pair"].append([mi, day, ia, ib, pidx(p, need_min=False), side, avg, place])
+            pair_games[(idx(a), idx(b), a["tag"], b["tag"])] += 1
+            pair_uses.append((mi, day, a, b, avg, place))
+    for mi, day, a, b, avg, place in pair_uses:
+        if pair_games[(idx(a), idx(b), a["tag"], b["tag"])] >= PAIR_ACCOUNT_GAMES:
+            acc["pair"].append([mi, day, idx(a), idx(b), pidx(a, need_min=False), pidx(b, need_min=False), avg, place])
     rows = lambda c: [[*k, n] for k, n in c.items()]
     out = {
         "sample": args.sample,
@@ -171,7 +170,7 @@ def main():
         "solo": rows(count["solo"]),
         "duo": rows(count["duo"]),
         "pair": rows(count["pair"]),
-        # [マップ, 日付, キャラ, プレイヤー, トロフィー, 順位]（pair は [マップ, 日付, キャラA, キャラB, プレイヤー, A/Bどちらを使ったか(0/1), チーム平均トロフィー, 順位]）
+        # [マップ, 日付, キャラ, プレイヤー, トロフィー, 順位]（pair は [マップ, 日付, キャラA, キャラB, キャラAのプレイヤー, キャラBのプレイヤー, チーム平均トロフィー, 順位]）
         "accounts": acc,
     }
     args.dst.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")))
