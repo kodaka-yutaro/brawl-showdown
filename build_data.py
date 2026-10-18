@@ -15,6 +15,8 @@ import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from collect import valid_shape
+
 ROOT = Path(__file__).parent
 JST = timezone(timedelta(hours=9))
 # アカウントは キャラトロフィー（デュオの組み合わせはチーム平均）がこの値以上のときだけ出す
@@ -36,6 +38,14 @@ def main():
 
     with args.src.open() as f:
         matches = [json.loads(line) for line in f if line.strip()]
+    # 他モード（トリオ・ハンター等）やフレンドバトルが混ざった古いレコードを除く
+    bad = [m for m in matches if not valid_shape(m["mode"], m["teams"]) or m.get("type") == "friendly"]
+    if bad:
+        matches = [m for m in matches if valid_shape(m["mode"], m["teams"]) and m.get("type") != "friendly"]
+        with args.src.open("w") as f:
+            for m in matches:
+                f.write(json.dumps(m, ensure_ascii=False, separators=(",", ":")) + "\n")
+        print(f"removed {len(bad)} matches that are not solo/duo showdown")
     newest = max(parse_time(m["time"]) for m in matches)
 
     if args.keep_days:
@@ -102,8 +112,6 @@ def main():
         else:
             teams = []
             for team in m["teams"]:
-                if len(team) != 2:
-                    continue
                 a, b = sorted(team, key=lambda p: p["brawler"])
                 avg = (a["trophies"] + b["trophies"]) / 2
                 teams.append([idx(a), a["trophies"], pidx(a, avg), idx(b), b["trophies"], pidx(b, avg)])

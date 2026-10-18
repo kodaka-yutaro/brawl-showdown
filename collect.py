@@ -50,16 +50,28 @@ def tag_path(tag):
     return urllib.parse.quote(tag if tag.startswith("#") else "#" + tag, safe="")
 
 
+def valid_shape(mode, teams):
+    """通常のトロフィー戦の形か。ソロは1人×10、デュオは2人×5。
+    APIはトリオショーダウンを battle.mode=duoShowdown、別モードの hunterSurvivor を soloShowdown として返すことがあるので、
+    人数の形でも弾く（event.mode を持たない古いレコードもこれで判定できる）。"""
+    size, count = (1, 10) if mode == "soloShowdown" else (2, 5)
+    return len(teams) == count and all(len(t) == size for t in teams)
+
+
 def normalize(b):
     """battlelogの1件をショーダウンの試合レコードに変換。対象外ならNone。"""
     battle = b.get("battle", {})
-    mode = battle.get("mode") or b.get("event", {}).get("mode")
-    if mode not in SHOWDOWN_MODES:
+    event_mode = b.get("event", {}).get("mode")
+    mode = battle.get("mode")
+    # event.mode が別モード（trioShowdown, hunterSurvivor など）なら対象外。フレンドバトルも除く
+    if mode not in SHOWDOWN_MODES or (event_mode and event_mode != mode) or battle.get("type") == "friendly":
         return None
     if mode == "soloShowdown":
         teams = [[p] for p in battle.get("players", [])]
     else:
         teams = battle.get("teams", [])
+    if not valid_shape(mode, teams):
+        return None
     out = []
     for team in teams:
         out.append([
@@ -73,6 +85,7 @@ def normalize(b):
         "id": b["battleTime"] + "|" + ",".join(tags),
         "time": b["battleTime"],
         "mode": mode,
+        "type": battle.get("type"),
         "map": b.get("event", {}).get("map"),
         "mapId": b.get("event", {}).get("id"),
         "teams": out,
