@@ -510,7 +510,7 @@ $("lang").addEventListener("change", () => {
 
 lang = pickLang();
 applyLang();
-fetch("data.json").then((r) => r.json()).then((d) => {
+fetch("data.json", { cache: "no-cache" }).then((r) => r.json()).then((d) => {
   state.data = d;
   $("sampleNotice").hidden = !d.sample;
   const opts = d.days.map((x) => `<option value="${x}">${fmtDay(x)}</option>`).join("");
