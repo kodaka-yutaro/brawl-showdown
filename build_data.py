@@ -21,8 +21,10 @@ from collect import valid_shape
 
 ROOT = Path(__file__).parent
 JST = timezone(timedelta(hours=9))
-# アカウントは キャラトロフィー（デュオの組み合わせはチーム平均）がこの値以上のときだけ出す
+# ソロ・デュオのアカウントは キャラトロフィーがこの値以上のときだけ出す
 ACCOUNT_MIN = 3000
+# デュオの組み合わせのアカウントは、トロフィーに関係なくその組み合わせを期間中にこの回数以上使った人だけ出す
+PAIR_ACCOUNT_GAMES = 5
 # 使用数を数えるトロフィー帯の幅（ページの入力もこの刻み）
 BUCKET = 50
 
@@ -96,8 +98,8 @@ def main():
             names.append(name)
         return index[name]
 
-    def pidx(p, rate=None):
-        if (p["trophies"] if rate is None else max(rate, p["trophies"])) < ACCOUNT_MIN:
+    def pidx(p, need_min=True):
+        if need_min and p["trophies"] < ACCOUNT_MIN:
             return -1
         if p.get("name"):
             player_names.setdefault(p["tag"], p["name"])
@@ -121,6 +123,7 @@ def main():
     show_from = newest - timedelta(days=args.days)
     count = {"solo": Counter(), "duo": Counter(), "pair": Counter(), "matches": Counter()}
     acc = {"solo": [], "duo": [], "pair": []}
+    pair_uses, pair_games = [], Counter()
     days = set()
     band = lambda tr: tr // BUCKET * BUCKET
     for m in matches:
@@ -146,15 +149,19 @@ def main():
                 count["duo"][(mi, day, idx(p), band(p["trophies"]))] += 1
                 if (pi := pidx(p)) >= 0:
                     acc["duo"].append([mi, day, idx(p), pi, p["trophies"], place])
-            pa, pb = pidx(a, avg), pidx(b, avg)
-            if pa >= 0 and pb >= 0 and avg >= ACCOUNT_MIN:
-                acc["pair"].append([mi, day, idx(a), idx(b), pa, pb, avg, place])
+            for side, p in enumerate((a, b)):
+                pair_games[(idx(a), idx(b), p["tag"])] += 1
+                pair_uses.append((mi, day, idx(a), idx(b), p, side, avg, place))
+    for mi, day, ia, ib, p, side, avg, place in pair_uses:
+        if pair_games[(ia, ib, p["tag"])] >= PAIR_ACCOUNT_GAMES:
+            acc["pair"].append([mi, day, ia, ib, pidx(p, need_min=False), side, avg, place])
     rows = lambda c: [[*k, n] for k, n in c.items()]
     out = {
         "sample": args.sample,
         "days": sorted(days),
         "bucket": BUCKET,
         "accountMin": ACCOUNT_MIN,
+        "pairAccountGames": PAIR_ACCOUNT_GAMES,
         "brawlers": [{"name": n, "id": brawler_ids.get(n)} for n in names],
         "maps": maps,
         "players": [[tag, player_names.get(tag, "")] for tag in players],
@@ -164,7 +171,7 @@ def main():
         "solo": rows(count["solo"]),
         "duo": rows(count["duo"]),
         "pair": rows(count["pair"]),
-        # [マップ, 日付, キャラ, プレイヤー, トロフィー, 順位]（pair は [マップ, 日付, キャラA, キャラB, プレイヤーA, プレイヤーB, 平均トロフィー, 順位]）
+        # [マップ, 日付, キャラ, プレイヤー, トロフィー, 順位]（pair は [マップ, 日付, キャラA, キャラB, プレイヤー, A/Bどちらを使ったか(0/1), チーム平均トロフィー, 順位]）
         "accounts": acc,
     }
     args.dst.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")))

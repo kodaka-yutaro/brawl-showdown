@@ -200,9 +200,10 @@ const I18N = {
     ruleDuo: "デュオバトロワで、各プレイヤーのキャラトロフィーが指定の範囲にあった使用を1回として数えます。",
     rulePair: "デュオバトロワの同じチーム2人のキャラの組み合わせを、2人の平均トロフィーで絞って数えます。",
     accountsOn: "行を押すと、使っていたアカウントが出ます。",
+    accountsPair: "行を押すと、この組み合わせを{n}戦以上使ったアカウントが出ます（トロフィーは問いません）。",
     accountsOff: "キャラトロフィー{n}以上で絞ると、行を押して使っていたアカウントを見られます。",
     account: "アカウント", team: "チーム", acUses: "使用", maxTrophy: "最高トロ", maxAvgTrophy: "最高平均トロ", avgPlace: "平均順位",
-    top30: "使用回数の多い30件を表示しています。", loadError: "データを準備しています。しばらくしてから開き直してください。",
+    top30: "使用回数の多い30件を表示しています。", noAccounts: "この条件で{n}戦以上使ったアカウントはまだいません。", loadError: "データを準備しています。しばらくしてから開き直してください。",
     aboutTitle: "このサイトについて",
     about1: "ブロスタのソロ・デュオバトルロワイヤル（ショーダウン）で、どのキャラがどのくらい使われているかをマップ別に集計しています。高いトロフィー帯でよく使われているキャラは、上手なプレイヤーが勝つために選んでいるキャラと考えられます。",
     about2: "データは Brawl Stars 公式APIから、世界と日本のランキング上位プレイヤーとその対戦相手の直近1週間の試合を集めたものです。毎日自動で更新しています。トロフィーはその試合で使ったキャラのトロフィーで、デュオの組み合わせはチーム2人の平均で絞り込みます。",
@@ -224,9 +225,10 @@ const I18N = {
     ruleDuo: "Counts each Duo Showdown player's pick whose brawler trophies fall in the selected range.",
     rulePair: "Counts brawler pairs on the same Duo Showdown team, filtered by the two players' average trophies.",
     accountsOn: "Tap a row to see the accounts that used it.",
+    accountsPair: "Tap a row to see the accounts that played this pair {n}+ times (any trophies).",
     accountsOff: "Filter to {n}+ brawler trophies to tap a row and see the accounts that used it.",
     account: "Account", team: "Team", acUses: "Picks", maxTrophy: "Best", maxAvgTrophy: "Best avg", avgPlace: "Avg rank",
-    top30: "Showing the 30 most frequent.", loadError: "Data is being prepared. Please reload in a little while.",
+    top30: "Showing the 30 most frequent.", noAccounts: "No account has played this {n}+ times under these filters yet.", loadError: "Data is being prepared. Please reload in a little while.",
     aboutTitle: "About this site",
     about1: "This site counts how often each brawler is picked in Brawl Stars Solo and Duo Showdown, per map. Brawlers that are picked often at high trophies are likely the ones strong players choose to win.",
     about2: "Data comes from the official Brawl Stars API: the last 7 days of matches from top-ranked players worldwide and in Japan, plus their opponents. It updates automatically every day. Trophies are the brawler's trophies in that match; Duo pairs are filtered by the team's average.",
@@ -248,9 +250,10 @@ const I18N = {
     ruleDuo: "在双人大逃杀中，每位玩家的英雄奖杯处于所选范围内的每次使用计为1次。",
     rulePair: "统计双人大逃杀同一队伍两名玩家的英雄组合，按两人的平均奖杯筛选。",
     accountsOn: "点击某一行即可查看使用过的账号。",
+    accountsPair: "点击某一行即可查看使用该组合{n}场以上的账号（不限奖杯）。",
     accountsOff: "将英雄奖杯筛选为{n}以上后，点击某一行即可查看使用过的账号。",
     account: "账号", team: "队伍", acUses: "使用", maxTrophy: "最高奖杯", maxAvgTrophy: "最高平均奖杯", avgPlace: "平均名次",
-    top30: "显示使用次数最多的30个。", loadError: "数据准备中，请稍后重新打开。",
+    top30: "显示使用次数最多的30个。", noAccounts: "在此条件下还没有使用{n}场以上的账号。", loadError: "数据准备中，请稍后重新打开。",
     aboutTitle: "关于本站",
     about1: "本站按地图统计荒野乱斗单人和双人大逃杀中各英雄的使用频率。在高奖杯段经常被使用的英雄，可以认为是高手为了获胜而选择的英雄。",
     about2: "数据来自 Brawl Stars 官方API，收集了全球及日本排行榜前列玩家及其对手最近7天的对战，每天自动更新。奖杯为该场对战所用英雄的奖杯，双人组合按队伍两人的平均奖杯筛选。",
@@ -272,9 +275,10 @@ const I18N = {
     ruleDuo: "듀오 쇼다운에서 각 플레이어의 브롤러 트로피가 선택한 범위에 있는 사용을 1회로 셉니다.",
     rulePair: "듀오 쇼다운 같은 팀 두 명의 브롤러 조합을 두 사람의 평균 트로피로 걸러 셉니다.",
     accountsOn: "행을 누르면 사용한 계정이 표시됩니다.",
+    accountsPair: "행을 누르면 이 조합을 {n}판 이상 사용한 계정이 표시됩니다(트로피 무관).",
     accountsOff: "브롤러 트로피를 {n} 이상으로 거르면 행을 눌러 사용한 계정을 볼 수 있습니다.",
     account: "계정", team: "팀", acUses: "사용", maxTrophy: "최고 트로피", maxAvgTrophy: "최고 평균", avgPlace: "평균 순위",
-    top30: "사용 횟수가 많은 30개를 표시합니다.", loadError: "데이터를 준비 중입니다. 잠시 후 다시 열어 주세요.",
+    top30: "사용 횟수가 많은 30개를 표시합니다.", noAccounts: "이 조건에서 {n}판 이상 사용한 계정이 아직 없습니다.", loadError: "데이터를 준비 중입니다. 잠시 후 다시 열어 주세요.",
     aboutTitle: "이 사이트에 대해",
     about1: "브롤스타즈 솔로・듀오 쇼다운에서 각 브롤러가 얼마나 사용되는지 맵별로 집계합니다. 높은 트로피 구간에서 자주 쓰이는 브롤러는 잘하는 플레이어가 이기기 위해 고르는 브롤러라고 볼 수 있습니다.",
     about2: "데이터는 Brawl Stars 공식 API에서 세계 및 일본 랭킹 상위 플레이어와 그 상대의 최근 7일 경기를 모은 것입니다. 매일 자동으로 갱신됩니다. 트로피는 그 경기에서 사용한 브롤러의 트로피이며, 듀오 조합은 팀 두 사람의 평균으로 거릅니다.",
@@ -352,24 +356,29 @@ function tally() {
 
 // そのキャラ（組み合わせ）を使っていたアカウントを、今の絞り込み条件で集計する
 // accounts.solo/duo: [マップ, 日付, キャラ, プレイヤー, トロフィー, 順位]
-// accounts.pair: [マップ, 日付, キャラA, キャラB, プレイヤーA, プレイヤーB, 平均トロフィー, 順位]
+// accounts.pair: [マップ, 日付, キャラA, キャラB, プレイヤー, A/Bどちらを使ったか, チーム平均トロフィー, 順位]
+// 組み合わせは、今の条件でその組み合わせを pairAccountGames 回以上使ったアカウントだけ出す
 function accounts(key) {
   const lo = num($("min").value), hi = num($("max").value);
   const acc = new Map();
-  const add = (k, tr, place) => {
-    const a = acc.get(k) || { n: 0, max: 0, places: 0 };
+  const add = (k, tr, place, side) => {
+    const a = acc.get(k) || { n: 0, max: 0, places: 0, side };
     a.n++; a.max = Math.max(a.max, tr); a.places += place; acc.set(k, a);
   };
   const [ka, kb] = String(key).split(",").map(Number);
   for (const r of state.data.accounts[state.view]) {
     if (!inScope(r)) continue;
-    if (state.view === "pair") { if (r[2] === ka && r[3] === kb && inBand(r[6], lo, hi)) add(r[4] + "," + r[5], r[6], r[7]); }
+    if (state.view === "pair") { if (r[2] === ka && r[3] === kb && inBand(r[6], lo, hi)) add(r[4], r[6], r[7], r[5] ? kb : ka); }
     else if (r[2] === ka && inBand(r[4], lo, hi)) add(r[3], r[4], r[5]);
   }
-  return [...acc.entries()].sort((x, y) => y[1].n - x[1].n || y[1].max - x[1].max);
+  const min = state.view === "pair" ? state.data.pairAccountGames || 1 : 1;
+  return [...acc.entries()].filter(([, a]) => a.n >= min).sort((x, y) => y[1].n - x[1].n || y[1].max - x[1].max);
 }
 
-function canShowAccounts() { const lo = num($("min").value); return lo !== null && lo >= state.data.accountMin; }
+function canShowAccounts() {
+  if (state.view === "pair") return !!state.data.pairAccountGames;
+  const lo = num($("min").value); return lo !== null && lo >= state.data.accountMin;
+}
 
 function playerLabel(p) {
   const [tag, name] = state.data.players[p];
@@ -379,9 +388,10 @@ function playerLabel(p) {
 function renderAccounts(key) {
   const list = accounts(key);
   const pair = state.view === "pair";
-  const rows = list.slice(0, 30).map(([k, a]) => `<tr><td>${String(k).split(",").map((p) => playerLabel(Number(p))).join('<span class="plus">＋</span>')}</td>
+  if (!list.length) return `<p class="rule">${t("noAccounts", { n: state.data.pairAccountGames || 1 })}</p>`;
+  const rows = list.slice(0, 30).map(([k, a]) => `<tr><td>${pair ? `<div class="who">${icon(a.side)}${playerLabel(k)}</div>` : playerLabel(k)}</td>
     <td class="num">${a.n}</td><td class="num">${fmtNum(a.max)}</td><td class="num">${(a.places / a.n).toFixed(1)}</td></tr>`).join("");
-  return `<div class="accounts"><table><thead><tr><th>${t(pair ? "team" : "account")}（${fmtNum(list.length)}）</th><th class="num">${t("acUses")}</th><th class="num">${t(pair ? "maxAvgTrophy" : "maxTrophy")}</th><th class="num">${t("avgPlace")}</th></tr></thead>
+  return `<div class="accounts"><table><thead><tr><th>${t("account")}（${fmtNum(list.length)}）</th><th class="num">${t("acUses")}</th><th class="num">${t(pair ? "maxAvgTrophy" : "maxTrophy")}</th><th class="num">${t("avgPlace")}</th></tr></thead>
     <tbody>${rows}</tbody></table>${list.length > 30 ? `<p class="rule">${t("top30")}</p>` : ""}</div>`;
 }
 
@@ -429,7 +439,7 @@ function render() {
   $("summary").innerHTML = `<span>${t("sumMatches", { n: fmtNum(nMatches) })}</span><span>${t("sumTotal", { n: fmtNum(total), unit })}</span><span>${t("sumKinds", { n: rows.length })}</span>` +
     (total > 0 && total < 300 ? `<span>${t("fewSamples")}</span>` : "");
   const showAcc = canShowAccounts();
-  $("rule").textContent = t(RULE_KEY[state.view]) + " " + (showAcc ? t("accountsOn") : t("accountsOff", { n: state.data.accountMin }));
+  $("rule").textContent = t(RULE_KEY[state.view]) + " " + (state.view === "pair" && showAcc ? t("accountsPair", { n: state.data.pairAccountGames }) : showAcc ? t("accountsOn") : t("accountsOff", { n: state.data.accountMin }));
   $("colName").textContent = t(state.view === "pair" ? "combo" : "brawler");
   const br = state.data.brawlers;
   const top = rows.slice(0, LIMIT[state.view]);

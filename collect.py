@@ -27,7 +27,8 @@ API_BASE = os.environ.get("BRAWL_API_BASE", "https://bsproxy.royaleapi.dev/v1")
 SHOWDOWN_MODES = {"soloShowdown", "duoShowdown"}
 # gzip で保存（毎日コミットするのでリポジトリを軽く保つ）
 DATA = Path(__file__).parent / "data" / "battles.jsonl.gz"
-NAME_MIN_TROPHIES = 2500
+# 名前を覚えておくプレイヤー（デュオの組み合わせはトロフィーに関係なくアカウントを出すので全員）
+NAME_MIN_TROPHIES = 0
 
 
 def get(path):
