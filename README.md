@@ -6,7 +6,7 @@ https://brawl.kdking-tools.com/
 
 - `collect.py`: 世界と14地域のランキング上位、その対戦相手の battlelog から直近7日のソロ・デュオショーダウン（トロフィー戦のみ）の試合を8並列で集め、`data/battles.jsonl.gz` に追記する。キャラIDを `data/brawlers.json`、トロフィー2500以上のプレイヤー名を `data/names.json` に保存
   - APIはトリオを `duoShowdown`、hunterSurvivor を `soloShowdown` として返すので、`event.mode`・`type=ranked`・人数（ソロ1人×10、デュオ2人×5）で判定する
-- `build_data.py`: `data/battles.jsonl.gz` から直近14日分の `site/data.json` を作る（14日より古い試合は削除）。ページは既定で直近7日を表示し、期間を広げるとバランス調整前と比べられる
+- `build_data.py`: `data/battles.jsonl.gz` から直近14日分の `site/data.json` を作る（14日より古い試合は削除）。試合が増えてもページが重くならないよう、使用数は (マップ, 日付, キャラ, 50刻みのトロフィー帯) ごとに数えて持つ。ページは既定で直近7日を表示し、期間を広げるとバランス調整前と比べられる
 - `i18n/map-names.json`: マップ名の日本語・中国語・韓国語（ゲームの翻訳ファイル `localization/*.csv` と `csv_logic/locations.csv` から作成。英語名がキー）
 - `site/`: 公開するページ（GitHub Pages）。キャラ・マップ画像は Brawlify の CDN から読む（読めなければ頭文字で代用）。キャラトロフィー3000以上で絞ったときだけ、行を押すと使っていたアカウントを出す
 - `.github/workflows/update.yml`: 1時間ごとに収集 → 集計 → Pages へ公開。試合データは履歴が増えないよう `data` ブランチに毎回1コミットで置き換えて保存する

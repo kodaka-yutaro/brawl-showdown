@@ -13,6 +13,7 @@
 import argparse
 import gzip
 import json
+from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -22,6 +23,8 @@ ROOT = Path(__file__).parent
 JST = timezone(timedelta(hours=9))
 # アカウントは キャラトロフィー（デュオの組み合わせはチーム平均）がこの値以上のときだけ出す
 ACCOUNT_MIN = 3000
+# 使用数を数えるトロフィー帯の幅（ページの入力もこの刻み）
+BUCKET = 50
 
 
 def parse_time(s):
@@ -112,39 +115,62 @@ def main():
             maps[map_index[name]]["ids"]["solo" if m["mode"] == "soloShowdown" else "duo"] = m["mapId"]
         return map_index[name]
 
-    # 1試合 = [マップ, 日付, 各チーム（順位順）...]。
-    # ソロのチームは [キャラ, トロフィー, プレイヤー]、デュオは [キャラA, トロA, プレイヤーA, キャラB, トロB, プレイヤーB]
+    # 試合が増えてもファイルが膨らまないよう、使用数は (マップ, 日付, キャラ, トロフィー帯) ごとに数えて持つ。
+    # トロフィー帯は BUCKET 刻みの下限値。デュオの組み合わせは2人の平均トロフィーの帯。
+    # アカウント表示用の個別の使用（ACCOUNT_MIN 以上）だけは1件ずつ持つ。
     show_from = newest - timedelta(days=args.days)
-    solo, duo = [], []
+    count = {"solo": Counter(), "duo": Counter(), "pair": Counter(), "matches": Counter()}
+    acc = {"solo": [], "duo": [], "pair": []}
     days = set()
+    band = lambda tr: tr // BUCKET * BUCKET
     for m in matches:
         t = parse_time(m["time"])
         if t < show_from:
             continue
         day = int(t.astimezone(JST).strftime("%Y%m%d"))
         days.add(day)
-        head = [midx(m), day]
-        if m["mode"] == "soloShowdown":
-            solo.append(head + [[idx(t[0]), t[0]["trophies"], pidx(t[0])] for t in m["teams"]])
-        else:
-            teams = []
-            for team in m["teams"]:
-                a, b = sorted(team, key=lambda p: p["brawler"])
-                avg = (a["trophies"] + b["trophies"]) / 2
-                teams.append([idx(a), a["trophies"], pidx(a, avg), idx(b), b["trophies"], pidx(b, avg)])
-            duo.append(head + teams)
+        mi = midx(m)
+        solo = m["mode"] == "soloShowdown"
+        count["matches"][("solo" if solo else "duo", mi, day)] += 1
+        for place, team in enumerate(m["teams"], start=1):
+            if solo:
+                p = team[0]
+                count["solo"][(mi, day, idx(p), band(p["trophies"]))] += 1
+                if (pi := pidx(p)) >= 0:
+                    acc["solo"].append([mi, day, idx(p), pi, p["trophies"], place])
+                continue
+            a, b = sorted(team, key=lambda p: p["brawler"])
+            avg = (a["trophies"] + b["trophies"]) // 2
+            count["pair"][(mi, day, idx(a), idx(b), band(avg))] += 1
+            for p in (a, b):
+                count["duo"][(mi, day, idx(p), band(p["trophies"]))] += 1
+                if (pi := pidx(p)) >= 0:
+                    acc["duo"].append([mi, day, idx(p), pi, p["trophies"], place])
+            pa, pb = pidx(a, avg), pidx(b, avg)
+            if pa >= 0 and pb >= 0 and avg >= ACCOUNT_MIN:
+                acc["pair"].append([mi, day, idx(a), idx(b), pa, pb, avg, place])
+    rows = lambda c: [[*k, n] for k, n in c.items()]
     out = {
         "sample": args.sample,
         "days": sorted(days),
+        "bucket": BUCKET,
         "accountMin": ACCOUNT_MIN,
         "brawlers": [{"name": n, "id": brawler_ids.get(n)} for n in names],
         "maps": maps,
         "players": [[tag, player_names.get(tag, "")] for tag in players],
-        "solo": solo,
-        "duo": duo,
+        # [ソロ/デュオ, マップ, 日付, 試合数]
+        "matches": rows(count["matches"]),
+        # [マップ, 日付, キャラ, トロフィー帯, 使用数]（pair は [マップ, 日付, キャラA, キャラB, 平均トロフィー帯, チーム数]）
+        "solo": rows(count["solo"]),
+        "duo": rows(count["duo"]),
+        "pair": rows(count["pair"]),
+        # [マップ, 日付, キャラ, プレイヤー, トロフィー, 順位]（pair は [マップ, 日付, キャラA, キャラB, プレイヤーA, プレイヤーB, 平均トロフィー, 順位]）
+        "accounts": acc,
     }
     args.dst.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")))
-    print(f"wrote {args.dst}: solo {len(solo)} matches, duo {len(duo)} matches, {len(maps)} maps (last {args.days} days)")
+    n_solo = sum(n for (mode, *_), n in count["matches"].items() if mode == "solo")
+    n_duo = sum(n for (mode, *_), n in count["matches"].items() if mode == "duo")
+    print(f"wrote {args.dst}: solo {n_solo} matches, duo {n_duo} matches, {len(maps)} maps (last {args.days} days)")
 
 
 if __name__ == "__main__":
