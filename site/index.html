@@ -3,17 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ショーダウン使用率｜ブロスタ バトルロワイヤルの強キャラ統計</title>
-<meta name="description" content="ブロスタ（Brawl Stars）のソロ・デュオショーダウンで、高トロフィー帯によく使われているキャラと組み合わせを集計。レート帯を絞って使用数ランキングを確認できます。毎日自動更新。">
+<title>バトロワ使用率｜ブロスタ バトルロワイヤルの強キャラ統計</title>
+<meta name="description" content="ブロスタ（Brawl Stars）のソロ・デュオバトルロワイヤル（ショーダウン）で、高トロフィー帯によく使われているキャラと組み合わせをマップ別に集計。レート帯・期間を絞って使用数ランキングを確認できます。毎日自動更新。">
 <link rel="canonical" href="https://brawl.kdking-tools.com/">
+<link rel="alternate" hreflang="ja" href="https://brawl.kdking-tools.com/">
+<link rel="alternate" hreflang="en" href="https://brawl.kdking-tools.com/?lang=en">
+<link rel="alternate" hreflang="zh-Hans" href="https://brawl.kdking-tools.com/?lang=zh">
+<link rel="alternate" hreflang="ko" href="https://brawl.kdking-tools.com/?lang=ko">
 <meta property="og:type" content="website">
-<meta property="og:title" content="ショーダウン使用率">
-<meta property="og:description" content="ブロスタのソロ・デュオショーダウンで高レート帯に使われているキャラと組み合わせのランキング。">
+<meta property="og:title" content="バトロワ使用率">
+<meta property="og:description" content="ブロスタのソロ・デュオバトルロワイヤルで高レート帯に使われているキャラと組み合わせのランキング。">
 <meta property="og:url" content="https://brawl.kdking-tools.com/">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
 <style>
-/* Layout: 1カラムの操作盤。上にレート帯の絞り込み、下にランキング表。 */
+/* Layout: 1カラムの操作盤。上にマップ・期間・レート帯の絞り込み、下にランキング表。 */
 :root {
   --bg: #f3f5f9;
   --panel: #ffffff;
@@ -59,135 +63,449 @@ table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nu
 th { text-align: left; font-size: .78rem; color: var(--muted); font-weight: 700; letter-spacing: .06em; padding: 6px 8px; border-bottom: 1px solid var(--line); }
 td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
 td.rank { width: 2.5em; color: var(--muted); }
-td.name { font-weight: 700; white-space: nowrap; }
+td.name { font-weight: 700; }
 td.num { text-align: right; width: 5em; }
 td.barcell { width: 40%; min-width: 120px; }
 .bar { height: 10px; background: var(--bar-soft); border-radius: 5px; overflow: hidden; }
 .bar > span { display: block; height: 100%; background: var(--bar); border-radius: 5px; }
 tr.top td.rank { color: var(--accent); font-family: var(--font-display); }
 .empty { color: var(--muted); padding: 24px 8px; }
+.field { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.field > label, .group-label { font-size: .85rem; color: var(--muted); letter-spacing: .04em; min-width: 7.5em; }
+select, .field input { font: inherit; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); font-variant-numeric: tabular-nums; }
+.field input { width: 6.5em; }
+.wrap > *, .controls > * { min-width: 0; }
+.maps { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x proximity; }
+.map { flex: 0 0 auto; width: 112px; border-radius: 10px; padding: 0; overflow: hidden; display: grid; grid-template-rows: 64px auto; text-align: left; scroll-snap-align: start; }
+.map .thumb { background: var(--bar-soft); display: grid; place-items: center; font-family: var(--font-display); color: var(--muted); font-size: 1.1rem; overflow: hidden; }
+.map .thumb img { width: 100%; height: 64px; object-fit: cover; display: block; }
+.map .cap { padding: 5px 8px 7px; font-size: .78rem; line-height: 1.3; }
+.map .cap small { display: block; color: var(--muted); font-variant-numeric: tabular-nums; }
+.map[aria-pressed="true"] { background: var(--panel); color: var(--fg); border: 2px solid var(--accent); }
+.who { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.who .plus { color: var(--muted); font-weight: 400; }
+.pair { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.icon { width: 40px; height: 40px; border-radius: 9px; background: var(--bar-soft); flex: none; object-fit: contain; display: inline-grid; place-items: center; font-family: var(--font-display); font-size: .8rem; color: var(--bar); }
+tr.row { cursor: pointer; }
+tr.row:hover td { background: var(--bar-soft); }
+tr.row[aria-expanded="true"] td { background: var(--bar-soft); }
+tr.row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+tr.detail > td { padding: 4px 8px 14px; }
+.accounts { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+.accounts table td { padding: 5px 6px; font-weight: 400; }
+.acct { display: inline-flex; flex-direction: column; line-height: 1.25; }
+.acct small { color: var(--muted); font-size: .75rem; }
+.accounts .plus { color: var(--muted); margin: 0 6px; }
+tr.top .icon { box-shadow: 0 0 0 2px var(--accent); }
+@media (max-width: 560px) { td.barcell { display: none; } .icon { width: 34px; height: 34px; } .pair .nm { display: none; } }
 .ad-slot { min-height: 90px; display: flex; align-items: center; justify-content: center; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); font-size: .82rem; }
 .intro h2 { font-size: 1.05rem; margin: 0 0 6px; }
 .intro p { margin: 0 0 10px; max-width: 65ch; }
 .site-footer { display: grid; gap: 6px; padding-top: 12px; border-top: 1px solid var(--line); font-size: .82rem; color: var(--muted); }
 .site-footer a { color: inherit; }
+header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 10px 16px; }
+.lang { display: flex; align-items: center; gap: 6px; font-size: .85rem; color: var(--muted); }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>ショーダウン使用率</h1>
-    <p class="sub" id="period">データを読み込んでいます</p>
-  </header>
-  <div class="notice" id="sampleNotice" hidden>これは画面確認用のダミーデータです。実際の使用率ではありません。</div>
-
-  <section class="controls" aria-label="絞り込み">
-    <div class="tabs" role="group" aria-label="集計の種類">
-      <button id="tab-solo" data-view="solo" aria-pressed="true">ソロ キャラ別</button>
-      <button id="tab-duo" data-view="duo" aria-pressed="false">デュオ キャラ別</button>
-      <button id="tab-pair" data-view="pair" aria-pressed="false">デュオ 組み合わせ</button>
+    <div>
+      <h1 data-i18n="title">バトロワ使用率</h1>
+      <p class="sub" id="period" data-i18n="loading">データを読み込んでいます</p>
     </div>
-    <div class="range">
-      <label for="min">キャラトロフィー</label>
+    <label class="lang"><span aria-hidden="true">🌐</span><select id="lang" aria-label="Language">
+        <option value="ja">日本語</option>
+        <option value="en">English</option>
+        <option value="zh">简体中文</option>
+        <option value="ko">한국어</option>
+      </select>
+    </label>
+  </header>
+  <div class="notice" id="sampleNotice" data-i18n="sample" hidden>これは画面確認用のダミーデータです。実際の使用率ではありません。</div>
+
+  <section class="controls" data-i18n-label="filters" aria-label="絞り込み">
+    <div class="tabs" role="group">
+      <button data-view="solo" aria-pressed="true" data-i18n="tabSolo">ソロ キャラ別</button>
+      <button data-view="duo" aria-pressed="false" data-i18n="tabDuo">デュオ キャラ別</button>
+      <button data-view="pair" aria-pressed="false" data-i18n="tabPair">デュオ 組み合わせ</button>
+    </div>
+    <div>
+      <div class="group-label" style="margin-bottom:6px" data-i18n="map">マップ</div>
+      <div class="maps" id="maps" role="group"></div>
+    </div>
+    <div class="field">
+      <label for="dayFrom" data-i18n="date">試合日（日本時間）</label>
+      <select id="dayFrom"></select><span>〜</span><select id="dayTo"></select>
+    </div>
+    <div class="chips" role="group" id="dayChips">
+      <button data-days="1" data-i18n="last1">直近1日</button><button data-days="3" data-i18n="last3">直近3日</button><button data-days="7" data-i18n="last7">直近7日</button><button data-days="0" data-i18n="all">すべて</button>
+    </div>
+    <div class="field">
+      <label for="min" data-i18n="trophies">キャラトロフィー</label>
       <input id="min" type="number" inputmode="numeric" min="0" step="50" value="2000">
       <span>〜</span>
-      <input id="max" type="number" inputmode="numeric" min="0" step="50" placeholder="上限なし">
+      <input id="max" type="number" inputmode="numeric" min="0" step="50" data-i18n-placeholder="noMax" placeholder="上限なし">
     </div>
-    <div class="chips" role="group" aria-label="よく使うレート帯">
-      <button data-min="2000" data-max="">2000以上</button>
+    <div class="chips" role="group" id="trophyChips">
+      <button data-min="3000" data-max="" data-i18n="over3000">3000以上</button>
+      <button data-min="2000" data-max="" data-i18n="over2000">2000以上</button>
+      <button data-min="2000" data-max="2999">2000〜2999</button>
       <button data-min="1500" data-max="1999">1500〜1999</button>
       <button data-min="1000" data-max="1499">1000〜1499</button>
-      <button data-min="" data-max="999">999以下</button>
-      <button data-min="" data-max="">すべて</button>
+      <button data-min="" data-max="999" data-i18n="under999">999以下</button>
+      <button data-min="" data-max="" data-i18n="all">すべて</button>
     </div>
     <p class="rule" id="rule"></p>
   </section>
 
-  <div class="ad-slot" aria-label="広告">広告枠（準備中）</div>
+  <div class="ad-slot" data-i18n="ad">広告枠（準備中）</div>
 
   <div class="summary" id="summary"></div>
   <div class="table-wrap"><table>
-    <thead><tr><th>#</th><th id="colName">キャラ</th><th class="num">使用数</th><th class="num">割合</th><th></th></tr></thead>
+    <thead><tr><th>#</th><th id="colName"></th><th class="num" data-i18n="uses">使用数</th><th class="num" data-i18n="share">割合</th><th></th></tr></thead>
     <tbody id="rows"></tbody>
   </table></div>
 
-  <div class="ad-slot" aria-label="広告">広告枠（準備中）</div>
+  <div class="ad-slot" data-i18n="ad">広告枠（準備中）</div>
 
   <section class="intro">
-    <h2>このサイトについて</h2>
-    <p>ブロスタのソロショーダウンとデュオショーダウンで、どのキャラがどのくらい使われているかを集計しています。高いトロフィー帯でよく使われているキャラは、上手なプレイヤーが勝つために選んでいるキャラと考えられます。</p>
-    <p>データは Brawl Stars 公式APIから、世界と日本のランキング上位プレイヤーとその対戦相手の最近の試合を集めたものです。毎日自動で更新しています。トロフィーはその試合で使ったキャラのトロフィーで、デュオの組み合わせはチーム2人の平均で絞り込みます。</p>
+    <h2 data-i18n="aboutTitle">このサイトについて</h2>
+    <p data-i18n="about1">ブロスタのソロ・デュオバトルロワイヤル（ショーダウン）で、どのキャラがどのくらい使われているかをマップ別に集計しています。高いトロフィー帯でよく使われているキャラは、上手なプレイヤーが勝つために選んでいるキャラと考えられます。</p>
+    <p data-i18n="about2">データは Brawl Stars 公式APIから、世界と日本のランキング上位プレイヤーとその対戦相手の直近1週間の試合を集めたものです。毎日自動で更新しています。トロフィーはその試合で使ったキャラのトロフィーで、デュオの組み合わせはチーム2人の平均で絞り込みます。</p>
   </section>
 
   <footer class="site-footer">
-    <div><a href="https://kdking-tools.com/">kdking tools</a> ・ <a href="about.html">運営者情報・お問い合わせ</a> ・ <a href="privacy.html">プライバシーポリシー</a> ・ © 2026 kdking</div>
+    <div><a href="https://kdking-tools.com/">kdking tools</a> ・ <a href="about.html" data-i18n="aboutLink">運営者情報・お問い合わせ</a> ・ <a href="privacy.html" data-i18n="privacy">プライバシーポリシー</a> ・ © 2026 kdking</div>
     <div>This material is unofficial and is not endorsed by Supercell. For more information see <a href="https://www.supercell.com/fan-content-policy" rel="noopener">Supercell's Fan Content Policy</a>.</div>
   </footer>
 </div>
 
 <script>
-const state = { view: "solo", data: null };
-const RULES = {
-  solo: "ソロショーダウンで、そのキャラのトロフィーが指定の範囲にあった使用を1回として数えます。",
-  duo: "デュオショーダウンで、各プレイヤーのキャラトロフィーが指定の範囲にあった使用を1回として数えます。",
-  pair: "デュオショーダウンの同じチーム2人のキャラの組み合わせを、2人の平均トロフィーで絞って数えます。",
+// 文言は日本語・英語・中国語（簡体字）・韓国語。キャラ名とマップ名は公式APIの英語名のまま出す。
+const I18N = {
+  ja: {
+    pageTitle: "バトロワ使用率｜ブロスタ バトルロワイヤルの強キャラ統計",
+    title: "バトロワ使用率", loading: "データを読み込んでいます", language: "言語",
+    sample: "これは画面確認用のダミーデータです。実際の使用率ではありません。", filters: "絞り込み",
+    tabSolo: "ソロ キャラ別", tabDuo: "デュオ キャラ別", tabPair: "デュオ 組み合わせ",
+    map: "マップ", allMaps: "全マップ", unknownMap: "不明", matchesN: "{n} 試合",
+    date: "試合日（日本時間）", last1: "直近1日", last3: "直近3日", last7: "直近7日", all: "すべて",
+    trophies: "キャラトロフィー", noMax: "上限なし", over3000: "3000以上", over2000: "2000以上", under999: "999以下",
+    ad: "広告枠（準備中）", uses: "使用数", share: "割合", brawler: "キャラ", combo: "組み合わせ",
+    period: "{from} 〜 {to} の試合　ソロ {solo} 試合 / デュオ {duo} 試合",
+    sumMatches: "試合 <b>{n}</b>", sumTotal: "対象 <b>{n}</b> {unit}", unitUses: "使用", unitTeams: "チーム", sumKinds: "種類 <b>{n}</b>",
+    fewSamples: "件数が少ないため順位はぶれやすいです", empty: "この条件の試合はまだありません。範囲を広げてください。",
+    ruleSolo: "ソロバトロワで、そのキャラのトロフィーが指定の範囲にあった使用を1回として数えます。",
+    ruleDuo: "デュオバトロワで、各プレイヤーのキャラトロフィーが指定の範囲にあった使用を1回として数えます。",
+    rulePair: "デュオバトロワの同じチーム2人のキャラの組み合わせを、2人の平均トロフィーで絞って数えます。",
+    accountsOn: "行を押すと、使っていたアカウントが出ます。",
+    accountsOff: "キャラトロフィー{n}以上で絞ると、行を押して使っていたアカウントを見られます。",
+    account: "アカウント", team: "チーム", acUses: "使用", maxTrophy: "最高トロ", maxAvgTrophy: "最高平均トロ", avgPlace: "平均順位",
+    top30: "使用回数の多い30件を表示しています。", loadError: "データを準備しています。しばらくしてから開き直してください。",
+    aboutTitle: "このサイトについて",
+    about1: "ブロスタのソロ・デュオバトルロワイヤル（ショーダウン）で、どのキャラがどのくらい使われているかをマップ別に集計しています。高いトロフィー帯でよく使われているキャラは、上手なプレイヤーが勝つために選んでいるキャラと考えられます。",
+    about2: "データは Brawl Stars 公式APIから、世界と日本のランキング上位プレイヤーとその対戦相手の直近1週間の試合を集めたものです。毎日自動で更新しています。トロフィーはその試合で使ったキャラのトロフィーで、デュオの組み合わせはチーム2人の平均で絞り込みます。",
+    aboutLink: "運営者情報・お問い合わせ", privacy: "プライバシーポリシー",
+  },
+  en: {
+    pageTitle: "Showdown Pick Rates | Brawl Stars Solo & Duo Showdown Stats",
+    title: "Showdown Pick Rates", loading: "Loading data…", language: "Language",
+    sample: "This is dummy data for layout testing, not real pick rates.", filters: "Filters",
+    tabSolo: "Solo · Brawlers", tabDuo: "Duo · Brawlers", tabPair: "Duo · Pairs",
+    map: "Map", allMaps: "All maps", unknownMap: "Unknown", matchesN: "{n} matches",
+    date: "Match date (JST)", last1: "Last 1 day", last3: "Last 3 days", last7: "Last 7 days", all: "All",
+    trophies: "Brawler trophies", noMax: "No limit", over3000: "3000+", over2000: "2000+", under999: "Under 1000",
+    ad: "Ad space", uses: "Picks", share: "Share", brawler: "Brawler", combo: "Pair",
+    period: "Matches from {from} to {to} · Solo {solo} / Duo {duo}",
+    sumMatches: "Matches <b>{n}</b>", sumTotal: "Counted <b>{n}</b> {unit}", unitUses: "picks", unitTeams: "teams", sumKinds: "Kinds <b>{n}</b>",
+    fewSamples: "Small sample: rankings may be unstable", empty: "No matches for these filters yet. Try widening them.",
+    ruleSolo: "Counts each Solo Showdown pick whose brawler trophies fall in the selected range.",
+    ruleDuo: "Counts each Duo Showdown player's pick whose brawler trophies fall in the selected range.",
+    rulePair: "Counts brawler pairs on the same Duo Showdown team, filtered by the two players' average trophies.",
+    accountsOn: "Tap a row to see the accounts that used it.",
+    accountsOff: "Filter to {n}+ brawler trophies to tap a row and see the accounts that used it.",
+    account: "Account", team: "Team", acUses: "Picks", maxTrophy: "Best", maxAvgTrophy: "Best avg", avgPlace: "Avg rank",
+    top30: "Showing the 30 most frequent.", loadError: "Data is being prepared. Please reload in a little while.",
+    aboutTitle: "About this site",
+    about1: "This site counts how often each brawler is picked in Brawl Stars Solo and Duo Showdown, per map. Brawlers that are picked often at high trophies are likely the ones strong players choose to win.",
+    about2: "Data comes from the official Brawl Stars API: the last 7 days of matches from top-ranked players worldwide and in Japan, plus their opponents. It updates automatically every day. Trophies are the brawler's trophies in that match; Duo pairs are filtered by the team's average.",
+    aboutLink: "About & contact", privacy: "Privacy policy",
+  },
+  zh: {
+    pageTitle: "荒野乱斗 大逃杀使用率｜单人/双人大逃杀强势英雄统计",
+    title: "大逃杀使用率", loading: "正在加载数据…", language: "语言",
+    sample: "这是用于界面测试的示例数据，并非真实使用率。", filters: "筛选",
+    tabSolo: "单人 · 英雄", tabDuo: "双人 · 英雄", tabPair: "双人 · 组合",
+    map: "地图", allMaps: "全部地图", unknownMap: "未知", matchesN: "{n} 场",
+    date: "对战日期（日本时间）", last1: "最近1天", last3: "最近3天", last7: "最近7天", all: "全部",
+    trophies: "英雄奖杯", noMax: "无上限", over3000: "3000以上", over2000: "2000以上", under999: "999以下",
+    ad: "广告位", uses: "使用次数", share: "占比", brawler: "英雄", combo: "组合",
+    period: "{from} 至 {to} 的对战　单人 {solo} 场 / 双人 {duo} 场",
+    sumMatches: "对战 <b>{n}</b>", sumTotal: "统计 <b>{n}</b> {unit}", unitUses: "次", unitTeams: "队", sumKinds: "种类 <b>{n}</b>",
+    fewSamples: "样本较少，排名可能不稳定", empty: "该条件下暂无对战，请放宽筛选范围。",
+    ruleSolo: "在单人大逃杀中，英雄奖杯处于所选范围内的每次使用计为1次。",
+    ruleDuo: "在双人大逃杀中，每位玩家的英雄奖杯处于所选范围内的每次使用计为1次。",
+    rulePair: "统计双人大逃杀同一队伍两名玩家的英雄组合，按两人的平均奖杯筛选。",
+    accountsOn: "点击某一行即可查看使用过的账号。",
+    accountsOff: "将英雄奖杯筛选为{n}以上后，点击某一行即可查看使用过的账号。",
+    account: "账号", team: "队伍", acUses: "使用", maxTrophy: "最高奖杯", maxAvgTrophy: "最高平均奖杯", avgPlace: "平均名次",
+    top30: "显示使用次数最多的30个。", loadError: "数据准备中，请稍后重新打开。",
+    aboutTitle: "关于本站",
+    about1: "本站按地图统计荒野乱斗单人和双人大逃杀中各英雄的使用频率。在高奖杯段经常被使用的英雄，可以认为是高手为了获胜而选择的英雄。",
+    about2: "数据来自 Brawl Stars 官方API，收集了全球及日本排行榜前列玩家及其对手最近7天的对战，每天自动更新。奖杯为该场对战所用英雄的奖杯，双人组合按队伍两人的平均奖杯筛选。",
+    aboutLink: "运营者信息・联系方式", privacy: "隐私政策",
+  },
+  ko: {
+    pageTitle: "쇼다운 픽률｜브롤스타즈 솔로・듀오 쇼다운 강캐 통계",
+    title: "쇼다운 픽률", loading: "데이터를 불러오는 중…", language: "언어",
+    sample: "화면 확인용 더미 데이터입니다. 실제 픽률이 아닙니다.", filters: "필터",
+    tabSolo: "솔로 · 브롤러", tabDuo: "듀오 · 브롤러", tabPair: "듀오 · 조합",
+    map: "맵", allMaps: "전체 맵", unknownMap: "알 수 없음", matchesN: "{n} 경기",
+    date: "경기 날짜 (일본 시간)", last1: "최근 1일", last3: "최근 3일", last7: "최근 7일", all: "전체",
+    trophies: "브롤러 트로피", noMax: "상한 없음", over3000: "3000 이상", over2000: "2000 이상", under999: "999 이하",
+    ad: "광고 영역", uses: "사용 수", share: "비율", brawler: "브롤러", combo: "조합",
+    period: "{from} ~ {to} 경기　솔로 {solo} 경기 / 듀오 {duo} 경기",
+    sumMatches: "경기 <b>{n}</b>", sumTotal: "대상 <b>{n}</b> {unit}", unitUses: "회", unitTeams: "팀", sumKinds: "종류 <b>{n}</b>",
+    fewSamples: "표본이 적어 순위가 흔들릴 수 있습니다", empty: "이 조건의 경기가 아직 없습니다. 범위를 넓혀 주세요.",
+    ruleSolo: "솔로 쇼다운에서 브롤러 트로피가 선택한 범위에 있는 사용을 1회로 셉니다.",
+    ruleDuo: "듀오 쇼다운에서 각 플레이어의 브롤러 트로피가 선택한 범위에 있는 사용을 1회로 셉니다.",
+    rulePair: "듀오 쇼다운 같은 팀 두 명의 브롤러 조합을 두 사람의 평균 트로피로 걸러 셉니다.",
+    accountsOn: "행을 누르면 사용한 계정이 표시됩니다.",
+    accountsOff: "브롤러 트로피를 {n} 이상으로 거르면 행을 눌러 사용한 계정을 볼 수 있습니다.",
+    account: "계정", team: "팀", acUses: "사용", maxTrophy: "최고 트로피", maxAvgTrophy: "최고 평균", avgPlace: "평균 순위",
+    top30: "사용 횟수가 많은 30개를 표시합니다.", loadError: "데이터를 준비 중입니다. 잠시 후 다시 열어 주세요.",
+    aboutTitle: "이 사이트에 대해",
+    about1: "브롤스타즈 솔로・듀오 쇼다운에서 각 브롤러가 얼마나 사용되는지 맵별로 집계합니다. 높은 트로피 구간에서 자주 쓰이는 브롤러는 잘하는 플레이어가 이기기 위해 고르는 브롤러라고 볼 수 있습니다.",
+    about2: "데이터는 Brawl Stars 공식 API에서 세계 및 일본 랭킹 상위 플레이어와 그 상대의 최근 7일 경기를 모은 것입니다. 매일 자동으로 갱신됩니다. 트로피는 그 경기에서 사용한 브롤러의 트로피이며, 듀오 조합은 팀 두 사람의 평균으로 거릅니다.",
+    aboutLink: "운영자 정보・문의", privacy: "개인정보 처리방침",
+  },
 };
+const LANGS = Object.keys(I18N);
+let lang = "ja";
+function t(key, vars = {}) {
+  const s = I18N[lang][key] ?? I18N.ja[key] ?? key;
+  return s.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? "");
+}
+function pickLang() {
+  const q = new URLSearchParams(location.search).get("lang");
+  if (LANGS.includes(q)) return q;
+  try { const saved = localStorage.getItem("lang"); if (LANGS.includes(saved)) return saved; } catch (e) {}
+  for (const l of navigator.languages || [navigator.language]) {
+    const base = String(l).toLowerCase().slice(0, 2);
+    if (LANGS.includes(base)) return base;
+  }
+  return "ja";
+}
+function applyLang() {
+  document.documentElement.lang = lang === "zh" ? "zh-Hans" : lang;
+  document.title = t("pageTitle");
+  for (const el of document.querySelectorAll("[data-i18n]")) el.textContent = t(el.dataset.i18n);
+  for (const el of document.querySelectorAll("[data-i18n-placeholder]")) el.placeholder = t(el.dataset.i18nPlaceholder);
+  for (const el of document.querySelectorAll("[data-i18n-label]")) el.setAttribute("aria-label", t(el.dataset.i18nLabel));
+  $("lang").value = lang;
+  renderPeriod();
+  render();
+}
+
+// 画像は Brawlify の CDN（キャラ・マップのIDで引く）。読めなければ頭文字やマップ名で代用する。
+const IMG = {
+  brawler: (id) => `https://cdn.brawlify.com/brawlers/borderless/${id}.png`,
+  map: (id) => `https://cdn.brawlify.com/maps/regular/${id}.png`,
+};
+const state = { view: "solo", map: -1, data: null, open: null };
+const RULE_KEY = { solo: "ruleSolo", duo: "ruleDuo", pair: "rulePair" };
 const LIMIT = { solo: 200, duo: 200, pair: 30 };
 const $ = (id) => document.getElementById(id);
 
 function num(v) { return v === "" ? null : Number(v); }
 function inBand(t, lo, hi) { return (lo === null || t >= lo) && (hi === null || t <= hi); }
+function fmtDay(d) { const s = String(d); return `${s.slice(0, 4)}/${s.slice(4, 6)}/${s.slice(6, 8)}`; }
+function fmtNum(n) { return n.toLocaleString(lang); }
+function escapeHtml(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
-function tally() {
-  const d = state.data, lo = num($("min").value), hi = num($("max").value);
+function matchesInPeriod() {
+  const d = state.data, from = Number($("dayFrom").value), to = Number($("dayTo").value);
+  const list = state.view === "solo" ? d.solo : d.duo;
+  return list.filter((m) => m[1] >= from && m[1] <= to);
+}
+
+function icon(b) {
+  const br = state.data.brawlers[b];
+  if (!br.id) return `<span class="icon">${escapeHtml(br.name.slice(0, 2))}</span>`;
+  return `<img class="icon" src="${IMG.brawler(br.id)}" alt="" loading="lazy" data-fallback="${escapeHtml(br.name.slice(0, 2))}">`;
+}
+
+// 1試合 = [マップ, 日付, 各チーム（順位順）...]
+// ソロのチームは [キャラ, トロフィー, プレイヤー]、デュオは [キャラA, トロA, プレイヤーA, キャラB, トロB, プレイヤーB]
+function tally(matches) {
+  const lo = num($("min").value), hi = num($("max").value);
   const counts = new Map();
   const add = (k) => counts.set(k, (counts.get(k) || 0) + 1);
-  if (state.view === "solo") {
-    for (const [b, t] of d.solo) if (inBand(t, lo, hi)) add(d.brawlers[b]);
-  } else if (state.view === "duo") {
-    for (const [a, ta, b, tb] of d.duo) { if (inBand(ta, lo, hi)) add(d.brawlers[a]); if (inBand(tb, lo, hi)) add(d.brawlers[b]); }
-  } else {
-    for (const [a, ta, b, tb] of d.duo) if (inBand((ta + tb) / 2, lo, hi)) add(d.brawlers[a] + " ＋ " + d.brawlers[b]);
+  for (const m of matches) {
+    if (state.map >= 0 && m[0] !== state.map) continue;
+    for (let i = 2; i < m.length; i++) {
+      const t = m[i];
+      if (state.view === "solo") { if (inBand(t[1], lo, hi)) add(t[0]); }
+      else if (state.view === "duo") { if (inBand(t[1], lo, hi)) add(t[0]); if (inBand(t[4], lo, hi)) add(t[3]); }
+      else if (inBand((t[1] + t[4]) / 2, lo, hi)) add(t[0] + "," + t[3]);
+    }
   }
   const total = [...counts.values()].reduce((s, n) => s + n, 0);
-  const rows = [...counts.entries()].sort((x, y) => y[1] - x[1]);
-  return { rows, total };
+  return { rows: [...counts.entries()].sort((x, y) => y[1] - x[1]), total };
+}
+
+// そのキャラ（組み合わせ）を使っていたアカウントを、今の絞り込み条件で集計する
+function accounts(key) {
+  const lo = num($("min").value), hi = num($("max").value);
+  const acc = new Map();
+  const add = (k, tr, place) => {
+    const a = acc.get(k) || { n: 0, max: 0, places: 0 };
+    a.n++; a.max = Math.max(a.max, tr); a.places += place; acc.set(k, a);
+  };
+  const [ka, kb] = String(key).split(",").map(Number);
+  for (const m of matchesInPeriod()) {
+    if (state.map >= 0 && m[0] !== state.map) continue;
+    for (let i = 2; i < m.length; i++) {
+      const t = m[i], place = i - 1;
+      if (state.view === "solo") { if (t[0] === ka && t[2] >= 0 && inBand(t[1], lo, hi)) add(t[2], t[1], place); }
+      else if (state.view === "duo") {
+        if (t[0] === ka && t[2] >= 0 && inBand(t[1], lo, hi)) add(t[2], t[1], place);
+        if (t[3] === ka && t[5] >= 0 && inBand(t[4], lo, hi)) add(t[5], t[4], place);
+      } else if (t[0] === ka && t[3] === kb && t[2] >= 0 && t[5] >= 0 && inBand((t[1] + t[4]) / 2, lo, hi)) add(t[2] + "," + t[5], Math.round((t[1] + t[4]) / 2), place);
+    }
+  }
+  return [...acc.entries()].sort((x, y) => y[1].n - x[1].n || y[1].max - x[1].max);
+}
+
+function canShowAccounts() { const lo = num($("min").value); return lo !== null && lo >= state.data.accountMin; }
+
+function playerLabel(p) {
+  const [tag, name] = state.data.players[p];
+  return `<span class="acct">${name ? escapeHtml(name) : ""}<small>${escapeHtml(tag)}</small></span>`;
+}
+
+function renderAccounts(key) {
+  const list = accounts(key);
+  const pair = state.view === "pair";
+  const rows = list.slice(0, 30).map(([k, a]) => `<tr><td>${String(k).split(",").map((p) => playerLabel(Number(p))).join('<span class="plus">＋</span>')}</td>
+    <td class="num">${a.n}</td><td class="num">${fmtNum(a.max)}</td><td class="num">${(a.places / a.n).toFixed(1)}</td></tr>`).join("");
+  return `<div class="accounts"><table><thead><tr><th>${t(pair ? "team" : "account")}（${fmtNum(list.length)}）</th><th class="num">${t("acUses")}</th><th class="num">${t(pair ? "maxAvgTrophy" : "maxTrophy")}</th><th class="num">${t("avgPlace")}</th></tr></thead>
+    <tbody>${rows}</tbody></table>${list.length > 30 ? `<p class="rule">${t("top30")}</p>` : ""}</div>`;
+}
+
+function renderMaps(matches) {
+  const d = state.data, count = new Map();
+  for (const m of matches) count.set(m[0], (count.get(m[0]) || 0) + 1);
+  if (state.map >= 0 && !count.has(state.map)) state.map = -1;
+  const mode = state.view === "solo" ? "solo" : "duo";
+  const cards = [[-1, matches.length], ...[...count.entries()].sort((a, b) => b[1] - a[1])];
+  $("maps").innerHTML = cards.map(([i, n]) => {
+    const mp = i < 0 ? null : d.maps[i];
+    const id = mp && (mp.ids[mode] || Object.values(mp.ids)[0]);
+    const thumb = id ? `<img src="${IMG.map(id)}" alt="" loading="lazy" data-hide>` : (mp ? "" : "ALL");
+    const name = mp ? (mp.name === "不明" ? t("unknownMap") : escapeHtml(mp.name)) : t("allMaps");
+    return `<button class="map" data-map="${i}" aria-pressed="${i === state.map}">
+      <span class="thumb">${thumb}</span>
+      <span class="cap">${name}<small>${t("matchesN", { n: fmtNum(n) })}</small></span></button>`;
+  }).join("");
+}
+
+function renderPeriod() {
+  const d = state.data;
+  if (!d) return;
+  $("period").textContent = t("period", {
+    from: fmtDay(d.days[0]), to: fmtDay(d.days[d.days.length - 1]), solo: fmtNum(d.solo.length), duo: fmtNum(d.duo.length),
+  });
 }
 
 function render() {
   if (!state.data) return;
-  const { rows, total } = tally();
-  const unit = state.view === "pair" ? "チーム" : "使用";
-  $("summary").innerHTML = `<span>対象 <b>${total.toLocaleString()}</b> ${unit}</span><span>種類 <b>${rows.length}</b></span>` +
-    (total > 0 && total < 300 ? `<span>件数が少ないため順位はぶれやすいです</span>` : "");
-  $("rule").textContent = RULES[state.view];
-  $("colName").textContent = state.view === "pair" ? "組み合わせ" : "キャラ";
+  const matches = matchesInPeriod();
+  renderMaps(matches);
+  const { rows, total } = tally(matches);
+  const nMatches = state.map < 0 ? matches.length : matches.filter((m) => m[0] === state.map).length;
+  const unit = t(state.view === "pair" ? "unitTeams" : "unitUses");
+  $("summary").innerHTML = `<span>${t("sumMatches", { n: fmtNum(nMatches) })}</span><span>${t("sumTotal", { n: fmtNum(total), unit })}</span><span>${t("sumKinds", { n: rows.length })}</span>` +
+    (total > 0 && total < 300 ? `<span>${t("fewSamples")}</span>` : "");
+  const showAcc = canShowAccounts();
+  $("rule").textContent = t(RULE_KEY[state.view]) + " " + (showAcc ? t("accountsOn") : t("accountsOff", { n: state.data.accountMin }));
+  $("colName").textContent = t(state.view === "pair" ? "combo" : "brawler");
+  const br = state.data.brawlers;
   const top = rows.slice(0, LIMIT[state.view]);
   const max = top.length ? top[0][1] : 1;
-  $("rows").innerHTML = top.length ? top.map(([name, n], i) => `
-    <tr class="${i < 3 ? "top" : ""}"><td class="rank">${i + 1}</td><td class="name">${escapeHtml(name)}</td>
-    <td class="num">${n.toLocaleString()}</td><td class="num">${(n / total * 100).toFixed(1)}%</td>
-    <td class="barcell"><div class="bar"><span style="width:${(n / max * 100).toFixed(1)}%"></span></div></td></tr>`).join("")
-    : `<tr><td colspan="5" class="empty">この範囲の試合はまだありません。範囲を広げてください。</td></tr>`;
+  $("rows").innerHTML = top.length ? top.map(([key, n], i) => {
+    let who;
+    if (state.view === "pair") {
+      const [a, b] = key.split(",").map(Number);
+      who = `<span class="pair">${icon(a)}<span class="nm">${escapeHtml(br[a].name)}</span></span><span class="plus">＋</span><span class="pair">${icon(b)}<span class="nm">${escapeHtml(br[b].name)}</span></span>`;
+    } else {
+      who = `${icon(key)}<span>${escapeHtml(br[key].name)}</span>`;
+    }
+    const open = showAcc && String(key) === String(state.open);
+    const rowAttr = showAcc ? `class="row ${i < 3 ? "top" : ""}" data-key="${key}" aria-expanded="${open}" tabindex="0"` : `class="${i < 3 ? "top" : ""}"`;
+    return `<tr ${rowAttr}><td class="rank">${i + 1}</td><td class="name"><div class="who">${who}</div></td>
+    <td class="num">${fmtNum(n)}</td><td class="num">${(n / total * 100).toFixed(1)}%</td>
+    <td class="barcell"><div class="bar"><span style="width:${(n / max * 100).toFixed(1)}%"></span></div></td></tr>` +
+      (open ? `<tr class="detail"><td></td><td colspan="4">${renderAccounts(key)}</td></tr>` : "");
+  }).join("") : `<tr><td colspan="5" class="empty">${t("empty")}</td></tr>`;
   for (const btn of document.querySelectorAll("[data-view]")) btn.setAttribute("aria-pressed", btn.dataset.view === state.view);
-  for (const c of document.querySelectorAll(".chips button"))
+  for (const c of document.querySelectorAll("#trophyChips button"))
     c.setAttribute("aria-pressed", c.dataset.min === $("min").value && c.dataset.max === $("max").value);
+  const days = state.data.days, from = Number($("dayFrom").value), to = Number($("dayTo").value);
+  for (const c of document.querySelectorAll("#dayChips button")) {
+    const k = Number(c.dataset.days);
+    const want = k ? days[Math.max(0, days.length - k)] : days[0];
+    c.setAttribute("aria-pressed", to === days[days.length - 1] && from === want);
+  }
 }
 
-function escapeHtml(s) { return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+// 画像が読めなかったときの代用表示
+document.addEventListener("error", (e) => {
+  const img = e.target;
+  if (!(img instanceof HTMLImageElement)) return;
+  if (img.hasAttribute("data-hide")) { img.remove(); return; }
+  if (img.dataset.fallback) { const s = document.createElement("span"); s.className = img.className; s.textContent = img.dataset.fallback; img.replaceWith(s); }
+}, true);
 
-for (const btn of document.querySelectorAll("[data-view]")) btn.addEventListener("click", () => { state.view = btn.dataset.view; render(); });
-for (const c of document.querySelectorAll(".chips button")) c.addEventListener("click", () => { $("min").value = c.dataset.min; $("max").value = c.dataset.max; render(); });
-$("min").addEventListener("input", render);
-$("max").addEventListener("input", render);
+for (const btn of document.querySelectorAll("[data-view]")) btn.addEventListener("click", () => { state.view = btn.dataset.view; state.open = null; render(); });
+for (const c of document.querySelectorAll("#trophyChips button")) c.addEventListener("click", () => { $("min").value = c.dataset.min; $("max").value = c.dataset.max; render(); });
+for (const c of document.querySelectorAll("#dayChips button")) c.addEventListener("click", () => {
+  const days = state.data.days, k = Number(c.dataset.days);
+  $("dayFrom").value = k ? days[Math.max(0, days.length - k)] : days[0];
+  $("dayTo").value = days[days.length - 1];
+  render();
+});
+function toggleRow(tr) { state.open = String(state.open) === tr.dataset.key ? null : tr.dataset.key; render(); }
+$("rows").addEventListener("click", (e) => { const tr = e.target.closest("tr.row"); if (tr) toggleRow(tr); });
+$("rows").addEventListener("keydown", (e) => { const tr = e.target.closest("tr.row"); if (tr && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); toggleRow(tr); } });
+$("maps").addEventListener("click", (e) => { const b = e.target.closest("[data-map]"); if (b) { state.map = Number(b.dataset.map); render(); } });
+for (const id of ["min", "max"]) $(id).addEventListener("input", render);
+for (const id of ["dayFrom", "dayTo"]) $(id).addEventListener("change", () => {
+  if (Number($("dayFrom").value) > Number($("dayTo").value)) [$("dayFrom").value, $("dayTo").value] = [$("dayTo").value, $("dayFrom").value];
+  render();
+});
+$("lang").addEventListener("change", () => {
+  lang = $("lang").value;
+  try { localStorage.setItem("lang", lang); } catch (e) {}
+  const url = new URL(location.href);
+  if (lang === "ja") url.searchParams.delete("lang"); else url.searchParams.set("lang", lang);
+  history.replaceState(null, "", url);
+  applyLang();
+});
 
+lang = pickLang();
+applyLang();
 fetch("data.json").then((r) => r.json()).then((d) => {
   state.data = d;
   $("sampleNotice").hidden = !d.sample;
-  const fmt = (s) => s ? `${s.slice(0, 4)}/${s.slice(4, 6)}/${s.slice(6, 8)}` : "?";
-  $("period").textContent = `${fmt(d.from)} 〜 ${fmt(d.to)} の試合　ソロ ${d.matches.solo.toLocaleString()} 試合 / デュオ ${d.matches.duo.toLocaleString()} 試合`;
+  const opts = d.days.map((x) => `<option value="${x}">${fmtDay(x)}</option>`).join("");
+  $("dayFrom").innerHTML = opts; $("dayTo").innerHTML = opts;
+  $("dayFrom").value = d.days[Math.max(0, d.days.length - 7)];
+  $("dayTo").value = d.days[d.days.length - 1];
+  renderPeriod();
   render();
-}).catch(() => { $("period").textContent = "データを準備しています。しばらくしてから開き直してください。"; });
+}).catch(() => { $("period").textContent = t("loadError"); });
 </script>
 </body>
 </html>
