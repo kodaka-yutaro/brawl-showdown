@@ -2,7 +2,7 @@ name: バトロワのデータ更新と公開
 
 on:
   schedule:
-    - cron: "17 * * * *"   # 1時間ごと（混み合う毎時0分を避ける 
+  - cron: "*/15 * * * *"
   workflow_dispatch:
   push:
     branches: [main]
