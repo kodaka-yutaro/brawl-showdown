@@ -1,1 +1,5 @@
 __pycache__/
+# 試合データは data ブランチ、site/data.json は公開時に作る
+data/*
+!data/.gitkeep
+site/data.json

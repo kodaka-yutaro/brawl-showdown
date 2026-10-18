@@ -1,4 +1,4 @@
-"""data/battles.jsonl から サイト用の site/data.json を作る。
+"""data/battles.jsonl.gz から サイト用の site/data.json を作る。
 
 キャラごとの使用は「その試合でそのキャラのトロフィー」をレートとして保存し、
 レート帯・マップ・試合日での絞り込みはページ側で行う。デュオの組み合わせはチーム2人の平均トロフィーで絞る。
@@ -11,6 +11,7 @@
 --keep-days: battles.jsonl に残す期間。これより古い試合はファイルから削除する（0なら削除しない）
 """
 import argparse
+import gzip
 import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -29,30 +30,43 @@ def parse_time(s):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--src", default=ROOT / "data" / "battles.jsonl", type=Path)
+    ap.add_argument("--src", default=ROOT / "data" / "battles.jsonl.gz", type=Path)
     ap.add_argument("--dst", default=ROOT / "site" / "data.json", type=Path)
     ap.add_argument("--days", type=int, default=14)
     ap.add_argument("--keep-days", type=int, default=14)
     ap.add_argument("--sample", action="store_true", help="画面確認用のダミーデータとして印をつける")
     args = ap.parse_args()
 
-    with args.src.open() as f:
+    with gzip.open(args.src, "rt") as f:
         matches = [json.loads(line) for line in f if line.strip()]
-    # 他モード（トリオ・ハンター等）やフレンドバトルが混ざった古いレコードを除く
-    bad = [m for m in matches if not valid_shape(m["mode"], m["teams"]) or m.get("type") == "friendly"]
+    # トロフィー戦と確認できない試合（種別を記録していない古いレコード、他モード、フレンドバトル）を除く
+    bad = [m for m in matches if not valid_shape(m["mode"], m["teams"]) or m.get("type") != "ranked"]
     if bad:
-        matches = [m for m in matches if valid_shape(m["mode"], m["teams"]) and m.get("type") != "friendly"]
-        with args.src.open("w") as f:
+        matches = [m for m in matches if valid_shape(m["mode"], m["teams"]) and m.get("type") == "ranked"]
+        with gzip.open(args.src, "wt") as f:
             for m in matches:
                 f.write(json.dumps(m, ensure_ascii=False, separators=(",", ":")) + "\n")
         print(f"removed {len(bad)} matches that are not solo/duo showdown")
+    # 同じ試合を別のプレイヤーの戦績から拾うと終了時刻が数分ずれることがあるので、
+    # 同じモード・同じ顔ぶれで5分以内の試合は1試合として数える
+    last, uniq = {}, []
+    for m in sorted(matches, key=lambda m: m["time"]):
+        key = (m["mode"], m["id"].split("|", 1)[1])
+        t = parse_time(m["time"])
+        if key in last and t - last[key] <= timedelta(minutes=5):
+            continue
+        last[key] = t
+        uniq.append(m)
+    if len(uniq) != len(matches):
+        print(f"merged {len(matches) - len(uniq)} duplicate matches")
+    matches = uniq
     newest = max(parse_time(m["time"]) for m in matches)
 
     if args.keep_days:
         keep_from = newest - timedelta(days=args.keep_days)
         kept = [m for m in matches if parse_time(m["time"]) >= keep_from]
         if len(kept) != len(matches):
-            with args.src.open("w") as f:
+            with gzip.open(args.src, "wt") as f:
                 for m in kept:
                     f.write(json.dumps(m, ensure_ascii=False, separators=(",", ":")) + "\n")
             print(f"pruned {len(matches) - len(kept)} matches older than {args.keep_days} days")
@@ -60,6 +74,9 @@ def main():
 
     ids_file = args.src.parent / "brawlers.json"
     brawler_ids = json.loads(ids_file.read_text()) if ids_file.exists() else {}
+    # マップ名の日本語・中国語・韓国語（ゲームの翻訳ファイルから作ったもの。英語名がキー）
+    map_names_file = ROOT / "i18n" / "map-names.json"
+    map_names = json.loads(map_names_file.read_text()) if map_names_file.exists() else {}
     names_file = args.src.parent / "names.json"
     player_names = json.loads(names_file.read_text()) if names_file.exists() else {}
 
@@ -90,7 +107,7 @@ def main():
         name = m.get("map") or "不明"
         if name not in map_index:
             map_index[name] = len(maps)
-            maps.append({"name": name, "ids": {}})
+            maps.append({"name": name, "ids": {}, "local": map_names.get(name, {})})
         if m.get("mapId"):
             maps[map_index[name]]["ids"]["solo" if m["mode"] == "soloShowdown" else "duo"] = m["mapId"]
         return map_index[name]

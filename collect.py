@@ -1,7 +1,7 @@
 """Brawl Stars 公式APIからショーダウン（ソロ/デュオ）の試合を集めて data/battles.jsonl に追記する。
 
 使い方:
-  BRAWL_API_KEY=... python3 collect.py [--countries global,jp] [--max-players 500] [--days 7]
+  BRAWL_API_KEY=... python3 collect.py [--countries global,jp,...] [--max-players 3000] [--workers 8] [--days 7]
 
 直近 --days 日（既定7日）の試合だけを追記する。過去の実行で集めた試合は残るので、
 繰り返し実行すればバランス調整の前後を比べられる。
@@ -11,6 +11,7 @@ APIキーは「APIを呼ぶ側のIP」でしか使えない。既定ではRoyale
 自分のPCなど固定IPから直接呼ぶ場合は BRAWL_API_BASE=https://api.brawlstars.com/v1 を指定する。
 """
 import argparse
+import gzip
 import json
 import os
 import sys
@@ -18,12 +19,14 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 API_BASE = os.environ.get("BRAWL_API_BASE", "https://bsproxy.royaleapi.dev/v1")
 SHOWDOWN_MODES = {"soloShowdown", "duoShowdown"}
-DATA = Path(__file__).parent / "data" / "battles.jsonl"
+# gzip で保存（毎日コミットするのでリポジトリを軽く保つ）
+DATA = Path(__file__).parent / "data" / "battles.jsonl.gz"
 NAME_MIN_TROPHIES = 2500
 
 
@@ -63,8 +66,9 @@ def normalize(b):
     battle = b.get("battle", {})
     event_mode = b.get("event", {}).get("mode")
     mode = battle.get("mode")
-    # event.mode が別モード（trioShowdown, hunterSurvivor など）なら対象外。フレンドバトルも除く
-    if mode not in SHOWDOWN_MODES or (event_mode and event_mode != mode) or battle.get("type") == "friendly":
+    # トロフィー戦（type=ranked）の通常ソロ/デュオだけを残す。event.mode が別モード（trioShowdown, hunterSurvivor など）や、
+    # フレンドバトル・イベント戦は対象外
+    if mode not in SHOWDOWN_MODES or event_mode != mode or battle.get("type") != "ranked":
         return None
     if mode == "soloShowdown":
         teams = [[p] for p in battle.get("players", [])]
@@ -94,8 +98,10 @@ def normalize(b):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--countries", default="global,jp", help="ランキングを取る地域（カンマ区切り）")
-    ap.add_argument("--max-players", type=int, default=400, help="battlelogを取るプレイヤー数の上限")
+    ap.add_argument("--countries", default="global,jp,kr,tw,us,br,mx,de,fr,es,it,ru,tr,gb",
+                    help="ランキングを取る地域（カンマ区切り）")
+    ap.add_argument("--max-players", type=int, default=3000, help="battlelogを取るプレイヤー数の上限")
+    ap.add_argument("--workers", type=int, default=8, help="同時に問い合わせる数")
     ap.add_argument("--days", type=float, default=7, help="この日数より前の試合は集めない")
     ap.add_argument("--min-trophies", type=int, default=1000,
                     help="試合で見つけたプレイヤーを追加調査する最低キャラトロフィー")
@@ -110,7 +116,7 @@ def main():
         {b["name"]: b["id"] for b in brawlers.get("items", [])}, ensure_ascii=False))
     seen = set()
     if DATA.exists():
-        with DATA.open() as f:
+        with gzip.open(DATA, "rt") as f:
             seen = {json.loads(line)["id"] for line in f if line.strip()}
 
     since = (datetime.now(timezone.utc) - timedelta(days=args.days)).strftime("%Y%m%dT%H%M%S")
@@ -128,32 +134,30 @@ def main():
     names = json.loads(names_file.read_text()) if names_file.exists() else {}
 
     added = done = 0
-    with DATA.open("a") as f:
+    with gzip.open(DATA, "at") as f, ThreadPoolExecutor(args.workers) as pool:
         while queue and done < args.max_players:
-            tag = queue.pop(0)
-            done += 1
-            log = get(f"/players/{tag_path(tag)}/battlelog") or {}
-            for b in log.get("items", []):
-                battle = b.get("battle", {})
-                for p in battle.get("players", []) + [p for t in battle.get("teams", []) for p in t]:
-                    # 名前はサイトでアカウントを出す高トロフィー帯の分だけ残す
-                    if p.get("name") and p.get("brawler", {}).get("trophies", 0) >= NAME_MIN_TROPHIES:
-                        names[p["tag"]] = p["name"]
-                rec = normalize(b)
-                if not rec or rec["id"] in seen or rec["time"] < since:
-                    continue
-                seen.add(rec["id"])
-                f.write(json.dumps(rec, ensure_ascii=False, separators=(",", ":")) + "\n")
-                added += 1
-                # 高レートの対戦相手も調査対象に加えて、サンプルを広げる
-                for team in rec["teams"]:
-                    for p in team:
-                        if p["trophies"] >= args.min_trophies and p["tag"] not in queued:
-                            queued.add(p["tag"])
-                            queue.append(p["tag"])
-            time.sleep(0.05)
-            if done % 50 == 0:
-                print(f"{done} players, +{added} matches", file=sys.stderr)
+            batch = [queue.pop(0) for _ in range(min(args.workers * 4, len(queue), args.max_players - done))]
+            done += len(batch)
+            for log in pool.map(lambda tag: get(f"/players/{tag_path(tag)}/battlelog") or {}, batch):
+                for b in log.get("items", []):
+                    battle = b.get("battle", {})
+                    for p in battle.get("players", []) + [p for t in battle.get("teams", []) for p in t]:
+                        # 名前はサイトでアカウントを出す高トロフィー帯の分だけ残す
+                        if p.get("name") and p.get("brawler", {}).get("trophies", 0) >= NAME_MIN_TROPHIES:
+                            names[p["tag"]] = p["name"]
+                    rec = normalize(b)
+                    if not rec or rec["id"] in seen or rec["time"] < since:
+                        continue
+                    seen.add(rec["id"])
+                    f.write(json.dumps(rec, ensure_ascii=False, separators=(",", ":")) + "\n")
+                    added += 1
+                    # 高レートの対戦相手も調査対象に加えて、サンプルを広げる
+                    for team in rec["teams"]:
+                        for p in team:
+                            if p["trophies"] >= args.min_trophies and p["tag"] not in queued:
+                                queued.add(p["tag"])
+                                queue.append(p["tag"])
+            print(f"{done} players, +{added} matches", file=sys.stderr)
     names_file.write_text(json.dumps(names, ensure_ascii=False))
     print(f"done: {done} players checked, {added} new showdown matches, total {len(seen)}")
 

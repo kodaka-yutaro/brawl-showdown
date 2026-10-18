@@ -182,7 +182,7 @@ header { display: flex; flex-wrap: wrap; justify-content: space-between; align-i
 </div>
 
 <script>
-// 文言は日本語・英語・中国語（簡体字）・韓国語。キャラ名とマップ名は公式APIの英語名のまま出す。
+// 文言は日本語・英語・中国語（簡体字）・韓国語。マップ名は data.json の翻訳を使い、キャラ名は公式APIの英語名のまま出す。
 const I18N = {
   ja: {
     pageTitle: "バトロワ使用率｜ブロスタ バトルロワイヤルの強キャラ統計",
@@ -404,7 +404,7 @@ function renderMaps(matches) {
     const mp = i < 0 ? null : d.maps[i];
     const id = mp && (mp.ids[mode] || Object.values(mp.ids)[0]);
     const thumb = id ? `<img src="${IMG.map(id)}" alt="" loading="lazy" data-hide>` : (mp ? "" : "ALL");
-    const name = mp ? (mp.name === "不明" ? t("unknownMap") : escapeHtml(mp.name)) : t("allMaps");
+    const name = mp ? (mp.name === "不明" ? t("unknownMap") : escapeHtml((mp.local && mp.local[lang]) || mp.name)) : t("allMaps");
     return `<button class="map" data-map="${i}" aria-pressed="${i === state.map}">
       <span class="thumb">${thumb}</span>
       <span class="cap">${name}<small>${t("matchesN", { n: fmtNum(n) })}</small></span></button>`;

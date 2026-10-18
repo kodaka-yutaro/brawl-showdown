@@ -2,11 +2,11 @@ name: バトロワのデータ更新と公開
 
 on:
   schedule:
-    - cron: "0 18 * * *"   # 毎日 3:00 JST
+    - cron: "17 * * * *"   # 1時間ごと（混み合う毎時0分を避ける）
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["site/**"]
+    paths: ["site/**", "build_data.py", "i18n/**"]
 
 permissions:
   contents: write
@@ -28,21 +28,26 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      # 試合データは履歴を増やさないよう data ブランチ（毎回1コミットに置き換え）に置く
+      - name: これまでの試合データを取り出す
+        run: |
+          if git fetch --depth 1 origin data; then git checkout FETCH_HEAD -- data/; fi
       - name: 試合データを集める
         if: github.event_name != 'push'
         env:
           BRAWL_API_KEY: ${{ secrets.BRAWL_API_KEY }}
-        run: python3 collect.py --countries global,jp --max-players 400
+        run: python3 collect.py --max-players 3000
       - name: サイト用データを作る
-        run: if [ -f data/battles.jsonl ]; then python3 build_data.py; fi
-      - name: データをコミット
+        run: if [ -f data/battles.jsonl.gz ]; then python3 build_data.py; fi
+      - name: 試合データを data ブランチに保存
         if: github.event_name != 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
-          git add data/battles.jsonl data/names.json data/brawlers.json site/data.json
-          git diff --cached --quiet || git commit -m "データ更新 $(date -u +%Y-%m-%d)"
-          git push
+          export GIT_INDEX_FILE="$RUNNER_TEMP/data-index"
+          git add -f data/battles.jsonl.gz data/names.json data/brawlers.json
+          commit=$(git commit-tree "$(git write-tree)" -m "データ更新 $(date -u +%Y-%m-%dT%H:%MZ)")
+          git push -f origin "$commit:refs/heads/data"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
