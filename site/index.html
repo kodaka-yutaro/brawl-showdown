@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ブロスタ バトロワ最強キャラランキング｜ソロ・デュオ使用率 - バトロワ使用率</title>
+<title>ブロスタ バトロワ使用率｜最強キャラ・組み合わせの統計ツール（ソロ・デュオ）</title>
 <meta name="description" content="ブロスタ（Brawl Stars）のバトルロワイヤル（ソロ・デュオショーダウン）で、高トロフィー帯によく使われている最強キャラとデュオの組み合わせをマップ別にランキング。トロフィー帯・期間で絞り込めます。公式APIの実戦データを1時間ごとに自動更新。">
 <link rel="canonical" href="https://brawl.kdking-tools.com/">
 <link rel="alternate" hreflang="ja" href="https://brawl.kdking-tools.com/">
@@ -11,7 +11,7 @@
 <link rel="alternate" hreflang="zh-Hans" href="https://brawl.kdking-tools.com/?lang=zh">
 <link rel="alternate" hreflang="ko" href="https://brawl.kdking-tools.com/?lang=ko">
 <meta property="og:type" content="website">
-<meta property="og:title" content="バトロワ使用率">
+<meta property="og:title" content="ブロスタ バトロワ使用率｜統計ツール">
 <meta property="og:description" content="ブロスタのソロ・デュオバトルロワイヤルで高レート帯に使われているキャラと組み合わせのランキング。">
 <meta property="og:url" content="https://brawl.kdking-tools.com/">
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -45,6 +45,7 @@ body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--fo
   display: grid; gap: 20px; }
 h1 { font-family: var(--font-display); font-weight: 400; font-size: 1.9rem; line-height: 1.2; margin: 0; text-wrap: balance; }
 .sub { color: var(--muted); margin: 4px 0 0; font-size: .9rem; }
+.kicker { margin: 0 0 4px; font-size: .8rem; font-weight: 700; letter-spacing: .04em; color: var(--muted); }
 .notice { background: var(--accent); color: var(--accent-ink); padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: .9rem; }
 .controls { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 14px; }
 .tabs, .chips { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -120,7 +121,8 @@ header { display: flex; flex-wrap: wrap; justify-content: space-between; align-i
 <div class="wrap">
   <header>
     <div>
-      <h1 data-i18n="title">バトロワ使用率</h1>
+      <p class="kicker" data-i18n="kicker">ブロスタ（Brawl Stars）バトルロワイヤルの統計ツール</p>
+      <h1 data-i18n="title">ブロスタ バトロワ使用率</h1>
       <p class="sub" id="period" data-i18n="loading">データを読み込んでいます</p>
       <p class="sub" id="updated" hidden></p>
     </div>
@@ -197,8 +199,8 @@ header { display: flex; flex-wrap: wrap; justify-content: space-between; align-i
 // 文言は日本語・英語・中国語（簡体字）・韓国語。マップ名・キャラ名は data.json の翻訳（ゲームの翻訳ファイルから作ったもの）を使う。
 const I18N = {
   ja: {
-    pageTitle: "ブロスタ バトロワ最強キャラランキング｜ソロ・デュオ使用率 - バトロワ使用率",
-    title: "バトロワ使用率", loading: "データを読み込んでいます", language: "言語",
+    pageTitle: "ブロスタ バトロワ使用率｜最強キャラ・組み合わせの統計ツール（ソロ・デュオ）",
+    title: "ブロスタ バトロワ使用率", kicker: "ブロスタ（Brawl Stars）バトルロワイヤルの統計ツール", loading: "データを読み込んでいます", language: "言語",
     sample: "これは画面確認用のダミーデータです。実際の使用率ではありません。", filters: "絞り込み",
     tabSolo: "ソロ キャラ別", tabDuo: "デュオ キャラ別", tabPair: "デュオ 組み合わせ",
     map: "マップ", allMaps: "全マップ", unknownMap: "不明", matchesN: "{n} 試合",
@@ -223,8 +225,8 @@ const I18N = {
     aboutLink: "運営者情報・お問い合わせ", privacy: "プライバシーポリシー",
   },
   en: {
-    pageTitle: "Showdown Pick Rates | Brawl Stars Solo & Duo Showdown Stats",
-    title: "Showdown Pick Rates", loading: "Loading data…", language: "Language",
+    pageTitle: "Brawl Stars Showdown Pick Rates | Best Brawlers & Duo Pairs Stats Tool",
+    title: "Brawl Stars Showdown Pick Rates", kicker: "A stats tool for Brawl Stars Solo & Duo Showdown", loading: "Loading data…", language: "Language",
     sample: "This is dummy data for layout testing, not real pick rates.", filters: "Filters",
     tabSolo: "Solo · Brawlers", tabDuo: "Duo · Brawlers", tabPair: "Duo · Pairs",
     map: "Map", allMaps: "All maps", unknownMap: "Unknown", matchesN: "{n} matches",
@@ -249,8 +251,8 @@ const I18N = {
     aboutLink: "About & contact", privacy: "Privacy policy",
   },
   zh: {
-    pageTitle: "荒野乱斗 大逃杀使用率｜单人/双人大逃杀强势英雄统计",
-    title: "大逃杀使用率", loading: "正在加载数据…", language: "语言",
+    pageTitle: "荒野乱斗 大逃杀使用率｜单人/双人强势英雄与组合统计工具",
+    title: "荒野乱斗 大逃杀使用率", kicker: "荒野乱斗（Brawl Stars）大逃杀统计工具", loading: "正在加载数据…", language: "语言",
     sample: "这是用于界面测试的示例数据，并非真实使用率。", filters: "筛选",
     tabSolo: "单人 · 英雄", tabDuo: "双人 · 英雄", tabPair: "双人 · 组合",
     map: "地图", allMaps: "全部地图", unknownMap: "未知", matchesN: "{n} 场",
@@ -275,8 +277,8 @@ const I18N = {
     aboutLink: "运营者信息・联系方式", privacy: "隐私政策",
   },
   ko: {
-    pageTitle: "쇼다운 픽률｜브롤스타즈 솔로・듀오 쇼다운 강캐 통계",
-    title: "쇼다운 픽률", loading: "데이터를 불러오는 중…", language: "언어",
+    pageTitle: "브롤스타즈 쇼다운 픽률｜솔로・듀오 강캐・조합 통계 도구",
+    title: "브롤스타즈 쇼다운 픽률", kicker: "브롤스타즈(Brawl Stars) 쇼다운 통계 도구", loading: "데이터를 불러오는 중…", language: "언어",
     sample: "화면 확인용 더미 데이터입니다. 실제 픽률이 아닙니다.", filters: "필터",
     tabSolo: "솔로 · 브롤러", tabDuo: "듀오 · 브롤러", tabPair: "듀오 · 조합",
     map: "맵", allMaps: "전체 맵", unknownMap: "알 수 없음", matchesN: "{n} 경기",
