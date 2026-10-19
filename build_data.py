@@ -13,6 +13,7 @@
 import argparse
 import gzip
 import json
+import re
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -82,6 +83,8 @@ def main():
     # マップ名の日本語・中国語・韓国語（ゲームの翻訳ファイルから作ったもの。英語名がキー）
     map_names_file = ROOT / "i18n" / "map-names.json"
     map_names = json.loads(map_names_file.read_text()) if map_names_file.exists() else {}
+    brawler_names_file = ROOT / "i18n" / "brawler-names.json"
+    brawler_local = json.loads(brawler_names_file.read_text()) if brawler_names_file.exists() else {}
     names_file = args.src.parent / "names.json"
     player_names = json.loads(names_file.read_text()) if names_file.exists() else {}
 
@@ -163,7 +166,7 @@ def main():
         "bucket": BUCKET,
         "accountMin": ACCOUNT_MIN,
         "pairAccountGames": PAIR_ACCOUNT_GAMES,
-        "brawlers": [{"name": n, "id": brawler_ids.get(n)} for n in names],
+        "brawlers": [{"name": n, "id": brawler_ids.get(n), "local": brawler_local.get(n, {})} for n in names],
         "maps": maps,
         "players": [[tag, player_names.get(tag, "")] for tag in players],
         # [ソロ/デュオ, マップ, 日付, 試合数]
@@ -176,9 +179,66 @@ def main():
         "accounts": acc,
     }
     args.dst.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")))
+    if not args.sample:
+        write_snapshot(out, args.dst.parent)
     n_solo = sum(n for (mode, *_), n in count["matches"].items() if mode == "solo")
     n_duo = sum(n for (mode, *_), n in count["matches"].items() if mode == "duo")
     print(f"wrote {args.dst}: solo {n_solo} matches, duo {n_duo} matches, {len(maps)} maps (last {args.days} days)")
+
+
+SNAP_MIN = 2000  # まとめに使うトロフィーの下限
+SNAP_DAYS = 7
+
+
+def write_snapshot(d, site):
+    """検索エンジンにも読める日本語のまとめを index.html に書き込み、sitemap の更新日を今日にする。
+
+    ページ本体の表はブラウザで data.json から作るので、ここでは直近7日・トロフィー2000以上の上位だけを静的な文で残す。
+    """
+    days = set(d["days"][-SNAP_DAYS:])
+    ja = lambda i: d["brawlers"][i]["local"].get("ja") or d["brawlers"][i]["name"]
+    map_ja = lambda i: d["maps"][i]["local"].get("ja") or d["maps"][i]["name"]
+    esc = lambda x: x.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    def top(rows, key, n, map_i=None):
+        c = Counter()
+        for r in rows:
+            if r[1] in days and r[-2] >= SNAP_MIN and (map_i is None or r[0] == map_i):
+                c[key(r)] += r[-1]
+        return c.most_common(n)
+
+    solo = top(d["solo"], lambda r: r[2], 10)
+    duo = top(d["duo"], lambda r: r[2], 10)
+    pair = top(d["pair"], lambda r: (r[2], r[3]), 10)
+    li = lambda rows, f: "".join(f"<li>{esc(f(k))}</li>" for k, _ in rows)
+    maps = []
+    for mode, rows in (("ソロ", d["solo"]), ("デュオ", d["duo"])):
+        mm = Counter()
+        for r in d["matches"]:
+            if r[0] == ("solo" if mode == "ソロ" else "duo") and r[2] in days and d["maps"][r[1]]["name"] != "不明":
+                mm[r[1]] += r[3]
+        for mi, _ in mm.most_common():
+            t3 = top(rows, lambda r: r[2], 3, mi)
+            if t3:
+                maps.append(f"<dt>{esc(map_ja(mi))}（{mode}）</dt><dd>{esc('、'.join(ja(k) for k, _ in t3))}</dd>")
+    first, last = d["days"][-SNAP_DAYS:][0], d["days"][-1]
+    fmt = lambda x: f"{x // 10000}/{x // 100 % 100}/{x % 100}"
+    html = f"""<section class="intro snapshot" id="snapshot">
+    <h2>ブロスタ バトロワ最強キャラランキング（トロフィー{SNAP_MIN}以上）</h2>
+    <p>{fmt(first)}〜{fmt(last)}の試合で、キャラトロフィー{SNAP_MIN}以上のプレイヤーによく使われたキャラです。1時間ごとに自動で更新しています。</p>
+    <h3>ソロバトロワ 使用数トップ10</h3><ol>{li(solo, ja)}</ol>
+    <h3>デュオバトロワ 使用数トップ10</h3><ol>{li(duo, ja)}</ol>
+    <h3>デュオバトロワ 組み合わせトップ10</h3><ol>{li(pair, lambda k: ja(k[0]) + "＋" + ja(k[1]))}</ol>
+    <h3>マップ別 よく使われるキャラ</h3><dl class="maplist">{"".join(maps)}</dl>
+  </section>"""
+    index = site / "index.html"
+    page = index.read_text()
+    start, end = "<!-- snapshot:start -->", "<!-- snapshot:end -->"
+    a, b = page.index(start) + len(start), page.index(end)
+    index.write_text(page[:a] + html + page[b:])
+    today = datetime.now(JST).strftime("%Y-%m-%d")
+    sitemap = site / "sitemap.xml"
+    sitemap.write_text(re.sub(r"(<loc>https://brawl\.kdking-tools\.com/</loc><lastmod>)[^<]*", rf"\g<1>{today}", sitemap.read_text()))
 
 
 if __name__ == "__main__":

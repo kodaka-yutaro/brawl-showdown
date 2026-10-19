@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>バトロワ使用率｜ブロスタ バトルロワイヤルの強キャラ統計</title>
-<meta name="description" content="ブロスタ（Brawl Stars）のソロ・デュオバトルロワイヤル（ショーダウン）で、高トロフィー帯によく使われているキャラと組み合わせをマップ別に集計。レート帯・期間を絞って使用数ランキングを確認できます。毎日自動更新。">
+<title>ブロスタ バトロワ最強キャラランキング｜ソロ・デュオ使用率 - バトロワ使用率</title>
+<meta name="description" content="ブロスタ（Brawl Stars）のバトルロワイヤル（ソロ・デュオショーダウン）で、高トロフィー帯によく使われている最強キャラとデュオの組み合わせをマップ別にランキング。トロフィー帯・期間で絞り込めます。公式APIの実戦データを1時間ごとに自動更新。">
 <link rel="canonical" href="https://brawl.kdking-tools.com/">
 <link rel="alternate" hreflang="ja" href="https://brawl.kdking-tools.com/">
 <link rel="alternate" hreflang="en" href="https://brawl.kdking-tools.com/?lang=en">
@@ -103,6 +103,12 @@ tr.top .icon { box-shadow: 0 0 0 2px var(--accent); }
 @media (max-width: 560px) { td.barcell { display: none; } .icon { width: 34px; height: 34px; } .pair .nm { display: none; } }
 .ad-slot { min-height: 90px; display: flex; align-items: center; justify-content: center; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); font-size: .82rem; }
 .intro h2 { font-size: 1.05rem; margin: 0 0 6px; }
+.snapshot h2 { font-size: 1.05rem; margin: 0 0 4px; }
+.snapshot h3 { font-size: .95rem; margin: 14px 0 4px; }
+.snapshot ol { margin: 0; padding-left: 1.6em; columns: 2 12em; font-size: .9rem; }
+.snapshot .maplist { display: grid; grid-template-columns: repeat(auto-fill, minmax(15em, 1fr)); gap: 4px 16px; margin: 0; font-size: .85rem; }
+.snapshot .maplist dt { font-weight: 700; margin-top: 6px; }
+.snapshot .maplist dd { margin: 0; color: var(--muted); }
 .intro p { margin: 0 0 10px; max-width: 65ch; }
 .site-footer { display: grid; gap: 6px; padding-top: 12px; border-top: 1px solid var(--line); font-size: .82rem; color: var(--muted); }
 .site-footer a { color: inherit; }
@@ -173,10 +179,12 @@ header { display: flex; flex-wrap: wrap; justify-content: space-between; align-i
 
   <div class="ad-slot" data-i18n="ad">広告枠（準備中）</div>
 
+  <!-- snapshot:start --><!-- snapshot:end -->
+
   <section class="intro">
     <h2 data-i18n="aboutTitle">このサイトについて</h2>
     <p data-i18n="about1">ブロスタのソロ・デュオバトルロワイヤル（ショーダウン）で、どのキャラがどのくらい使われているかをマップ別に集計しています。高いトロフィー帯でよく使われているキャラは、上手なプレイヤーが勝つために選んでいるキャラと考えられます。</p>
-    <p data-i18n="about2">データは Brawl Stars 公式APIから、世界と日本のランキング上位プレイヤーとその対戦相手の直近1週間の試合を集めたものです。毎日自動で更新しています。トロフィーはその試合で使ったキャラのトロフィーで、デュオの組み合わせはチーム2人の平均で絞り込みます。</p>
+    <p data-i18n="about2">データは Brawl Stars 公式APIから、世界と日本のランキング上位プレイヤーとその対戦相手の直近1週間の試合を集めたものです。1時間ごとに自動で更新しています。トロフィーはその試合で使ったキャラのトロフィーで、デュオの組み合わせはチーム2人の平均で絞り込みます。</p>
   </section>
 
   <footer class="site-footer">
@@ -186,10 +194,10 @@ header { display: flex; flex-wrap: wrap; justify-content: space-between; align-i
 </div>
 
 <script>
-// 文言は日本語・英語・中国語（簡体字）・韓国語。マップ名は data.json の翻訳を使い、キャラ名は公式APIの英語名のまま出す。
+// 文言は日本語・英語・中国語（簡体字）・韓国語。マップ名・キャラ名は data.json の翻訳（ゲームの翻訳ファイルから作ったもの）を使う。
 const I18N = {
   ja: {
-    pageTitle: "バトロワ使用率｜ブロスタ バトルロワイヤルの強キャラ統計",
+    pageTitle: "ブロスタ バトロワ最強キャラランキング｜ソロ・デュオ使用率 - バトロワ使用率",
     title: "バトロワ使用率", loading: "データを読み込んでいます", language: "言語",
     sample: "これは画面確認用のダミーデータです。実際の使用率ではありません。", filters: "絞り込み",
     tabSolo: "ソロ キャラ別", tabDuo: "デュオ キャラ別", tabPair: "デュオ 組み合わせ",
@@ -211,7 +219,7 @@ const I18N = {
     top30: "使用回数の多い30件を表示しています。", noAccounts: "この条件で同じ2人で{n}戦以上使ったペアはまだいません。", loadError: "データを準備しています。しばらくしてから開き直してください。",
     aboutTitle: "このサイトについて",
     about1: "ブロスタのソロ・デュオバトルロワイヤル（ショーダウン）で、どのキャラがどのくらい使われているかをマップ別に集計しています。高いトロフィー帯でよく使われているキャラは、上手なプレイヤーが勝つために選んでいるキャラと考えられます。",
-    about2: "データは Brawl Stars 公式APIから、世界と日本のランキング上位プレイヤーとその対戦相手の直近1週間の試合を集めたものです。毎日自動で更新しています。トロフィーはその試合で使ったキャラのトロフィーで、デュオの組み合わせはチーム2人の平均で絞り込みます。",
+    about2: "データは Brawl Stars 公式APIから、世界と日本のランキング上位プレイヤーとその対戦相手の直近1週間の試合を集めたものです。1時間ごとに自動で更新しています。トロフィーはその試合で使ったキャラのトロフィーで、デュオの組み合わせはチーム2人の平均で絞り込みます。",
     aboutLink: "運営者情報・お問い合わせ", privacy: "プライバシーポリシー",
   },
   en: {
@@ -237,7 +245,7 @@ const I18N = {
     top30: "Showing the 30 most frequent.", noAccounts: "No duo has played this together {n}+ times under these filters yet.", loadError: "Data is being prepared. Please reload in a little while.",
     aboutTitle: "About this site",
     about1: "This site counts how often each brawler is picked in Brawl Stars Solo and Duo Showdown, per map. Brawlers that are picked often at high trophies are likely the ones strong players choose to win.",
-    about2: "Data comes from the official Brawl Stars API: the last 7 days of matches from top-ranked players worldwide and in Japan, plus their opponents. It updates automatically every day. Trophies are the brawler's trophies in that match; Duo pairs are filtered by the team's average.",
+    about2: "Data comes from the official Brawl Stars API: the last 7 days of matches from top-ranked players worldwide and in Japan, plus their opponents. It updates automatically every hour. Trophies are the brawler's trophies in that match; Duo pairs are filtered by the team's average.",
     aboutLink: "About & contact", privacy: "Privacy policy",
   },
   zh: {
@@ -263,7 +271,7 @@ const I18N = {
     top30: "显示使用次数最多的30个。", noAccounts: "在此条件下还没有一起使用{n}场以上的队伍。", loadError: "数据准备中，请稍后重新打开。",
     aboutTitle: "关于本站",
     about1: "本站按地图统计荒野乱斗单人和双人大逃杀中各英雄的使用频率。在高奖杯段经常被使用的英雄，可以认为是高手为了获胜而选择的英雄。",
-    about2: "数据来自 Brawl Stars 官方API，收集了全球及日本排行榜前列玩家及其对手最近7天的对战，每天自动更新。奖杯为该场对战所用英雄的奖杯，双人组合按队伍两人的平均奖杯筛选。",
+    about2: "数据来自 Brawl Stars 官方API，收集了全球及日本排行榜前列玩家及其对手最近7天的对战，每小时自动更新。奖杯为该场对战所用英雄的奖杯，双人组合按队伍两人的平均奖杯筛选。",
     aboutLink: "运营者信息・联系方式", privacy: "隐私政策",
   },
   ko: {
@@ -289,7 +297,7 @@ const I18N = {
     top30: "사용 횟수가 많은 30개를 표시합니다.", noAccounts: "이 조건에서 같은 두 명이 {n}판 이상 사용한 팀이 아직 없습니다.", loadError: "데이터를 준비 중입니다. 잠시 후 다시 열어 주세요.",
     aboutTitle: "이 사이트에 대해",
     about1: "브롤스타즈 솔로・듀오 쇼다운에서 각 브롤러가 얼마나 사용되는지 맵별로 집계합니다. 높은 트로피 구간에서 자주 쓰이는 브롤러는 잘하는 플레이어가 이기기 위해 고르는 브롤러라고 볼 수 있습니다.",
-    about2: "데이터는 Brawl Stars 공식 API에서 세계 및 일본 랭킹 상위 플레이어와 그 상대의 최근 7일 경기를 모은 것입니다. 매일 자동으로 갱신됩니다. 트로피는 그 경기에서 사용한 브롤러의 트로피이며, 듀오 조합은 팀 두 사람의 평균으로 거릅니다.",
+    about2: "데이터는 Brawl Stars 공식 API에서 세계 및 일본 랭킹 상위 플레이어와 그 상대의 최근 7일 경기를 모은 것입니다. 1시간마다 자동으로 갱신됩니다. 트로피는 그 경기에서 사용한 브롤러의 트로피이며, 듀오 조합은 팀 두 사람의 평균으로 거릅니다.",
     aboutLink: "운영자 정보・문의", privacy: "개인정보 처리방침",
   },
 };
@@ -316,6 +324,9 @@ function applyLang() {
   for (const el of document.querySelectorAll("[data-i18n-placeholder]")) el.placeholder = t(el.dataset.i18nPlaceholder);
   for (const el of document.querySelectorAll("[data-i18n-label]")) el.setAttribute("aria-label", t(el.dataset.i18nLabel));
   $("lang").value = lang;
+  // 日本語のまとめ（検索向けにビルド時に書き込む）は日本語のときだけ出す
+  const snap = document.getElementById("snapshot");
+  if (snap) snap.hidden = lang !== "ja";
   renderPeriod();
   render();
 }
@@ -341,6 +352,9 @@ function inScope(row) {
   const from = Number($("dayFrom").value), to = Number($("dayTo").value);
   return row[1] >= from && row[1] <= to && (state.map < 0 || row[0] === state.map);
 }
+// キャラ名は日本語・中国語・韓国語ならゲーム内の名前、英語は公式APIの名前
+function bname(b) { const br = state.data.brawlers[b]; return (br.local && br.local[lang]) || br.name; }
+
 function icon(b, cls = "icon") {
   const br = state.data.brawlers[b];
   if (!br.id) return `<span class="${cls}">${escapeHtml(br.name.slice(0, 2))}</span>`;
@@ -466,9 +480,9 @@ function render() {
     let who;
     if (state.view === "pair") {
       const [a, b] = key.split(",").map(Number);
-      who = `<span class="pair">${icon(a)}<span class="nm">${escapeHtml(br[a].name)}</span></span><span class="plus">＋</span><span class="pair">${icon(b)}<span class="nm">${escapeHtml(br[b].name)}</span></span>`;
+      who = `<span class="pair">${icon(a)}<span class="nm">${escapeHtml(bname(a))}</span></span><span class="plus">＋</span><span class="pair">${icon(b)}<span class="nm">${escapeHtml(bname(b))}</span></span>`;
     } else {
-      who = `${icon(key)}<span>${escapeHtml(br[key].name)}</span>`;
+      who = `${icon(key)}<span>${escapeHtml(bname(key))}</span>`;
     }
     const open = showAcc && String(key) === String(state.open);
     const rowAttr = showAcc ? `class="row ${i < 3 ? "top" : ""}" data-key="${key}" aria-expanded="${open}" tabindex="0"` : `class="${i < 3 ? "top" : ""}"`;
