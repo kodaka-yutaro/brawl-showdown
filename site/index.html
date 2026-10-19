@@ -116,6 +116,7 @@ header { display: flex; flex-wrap: wrap; justify-content: space-between; align-i
     <div>
       <h1 data-i18n="title">バトロワ使用率</h1>
       <p class="sub" id="period" data-i18n="loading">データを読み込んでいます</p>
+      <p class="sub" id="updated" hidden></p>
     </div>
     <label class="lang"><span aria-hidden="true">🌐</span><select id="lang" aria-label="Language">
         <option value="ja">日本語</option>
@@ -197,6 +198,7 @@ const I18N = {
     trophies: "キャラトロフィー", noMax: "上限なし", over3000: "3000以上", over2000: "2000以上", under999: "999以下",
     ad: "広告枠（準備中）", uses: "使用数", share: "割合", brawler: "キャラ", combo: "組み合わせ",
     period: "{from} 〜 {to} の試合　ソロ {solo} 試合 / デュオ {duo} 試合",
+    updated: "最終更新 {time}",
     sumMatches: "試合 <b>{n}</b>", sumTotal: "対象 <b>{n}</b> {unit}", unitUses: "使用", unitTeams: "チーム", sumKinds: "種類 <b>{n}</b>",
     fewSamples: "件数が少ないため順位はぶれやすいです", empty: "この条件の試合はまだありません。範囲を広げてください。",
     ruleSolo: "ソロバトロワで、そのキャラのトロフィーが指定の範囲にあった使用を1回として数えます。",
@@ -222,6 +224,7 @@ const I18N = {
     trophies: "Brawler trophies", noMax: "No limit", over3000: "3000+", over2000: "2000+", under999: "Under 1000",
     ad: "Ad space", uses: "Picks", share: "Share", brawler: "Brawler", combo: "Pair",
     period: "Matches from {from} to {to} · Solo {solo} / Duo {duo}",
+    updated: "Last updated {time}",
     sumMatches: "Matches <b>{n}</b>", sumTotal: "Counted <b>{n}</b> {unit}", unitUses: "picks", unitTeams: "teams", sumKinds: "Kinds <b>{n}</b>",
     fewSamples: "Small sample: rankings may be unstable", empty: "No matches for these filters yet. Try widening them.",
     ruleSolo: "Counts each Solo Showdown pick whose brawler trophies fall in the selected range.",
@@ -247,6 +250,7 @@ const I18N = {
     trophies: "英雄奖杯", noMax: "无上限", over3000: "3000以上", over2000: "2000以上", under999: "999以下",
     ad: "广告位", uses: "使用次数", share: "占比", brawler: "英雄", combo: "组合",
     period: "{from} 至 {to} 的对战　单人 {solo} 场 / 双人 {duo} 场",
+    updated: "最后更新 {time}",
     sumMatches: "对战 <b>{n}</b>", sumTotal: "统计 <b>{n}</b> {unit}", unitUses: "次", unitTeams: "队", sumKinds: "种类 <b>{n}</b>",
     fewSamples: "样本较少，排名可能不稳定", empty: "该条件下暂无对战，请放宽筛选范围。",
     ruleSolo: "在单人大逃杀中，英雄奖杯处于所选范围内的每次使用计为1次。",
@@ -272,6 +276,7 @@ const I18N = {
     trophies: "브롤러 트로피", noMax: "상한 없음", over3000: "3000 이상", over2000: "2000 이상", under999: "999 이하",
     ad: "광고 영역", uses: "사용 수", share: "비율", brawler: "브롤러", combo: "조합",
     period: "{from} ~ {to} 경기　솔로 {solo} 경기 / 듀오 {duo} 경기",
+    updated: "마지막 업데이트 {time}",
     sumMatches: "경기 <b>{n}</b>", sumTotal: "대상 <b>{n}</b> {unit}", unitUses: "회", unitTeams: "팀", sumKinds: "종류 <b>{n}</b>",
     fewSamples: "표본이 적어 순위가 흔들릴 수 있습니다", empty: "이 조건의 경기가 아직 없습니다. 범위를 넓혀 주세요.",
     ruleSolo: "솔로 쇼다운에서 브롤러 트로피가 선택한 범위에 있는 사용을 1회로 셉니다.",
@@ -431,6 +436,15 @@ function renderPeriod() {
     from: fmtDay(d.days[0]), to: fmtDay(d.days[d.days.length - 1]), solo: fmtNum(d.matches.reduce((s, r) => s + (r[0] === "solo" ? r[3] : 0), 0)),
     duo: fmtNum(d.matches.reduce((s, r) => s + (r[0] === "duo" ? r[3] : 0), 0)),
   });
+  // 最終更新は日本語なら日本時間、ほかの言語は見ている人の地域の時刻で出す
+  if (d.updated) {
+    const time = new Date(d.updated).toLocaleString(lang, {
+      year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", timeZoneName: "short",
+      ...(lang === "ja" ? { timeZone: "Asia/Tokyo" } : {}),
+    });
+    $("updated").textContent = t("updated", { time });
+    $("updated").hidden = false;
+  }
 }
 
 function render() {

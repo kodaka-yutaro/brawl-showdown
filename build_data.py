@@ -157,6 +157,8 @@ def main():
     rows = lambda c: [[*k, n] for k, n in c.items()]
     out = {
         "sample": args.sample,
+        # サイト用データを作った時刻（UTC）。ページで「最終更新」として出す
+        "updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "days": sorted(days),
         "bucket": BUCKET,
         "accountMin": ACCOUNT_MIN,
