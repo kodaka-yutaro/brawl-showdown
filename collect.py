@@ -58,11 +58,27 @@ def valid_shape(mode, teams):
     """通常のトロフィー戦の形か。ソロは1人×10、デュオは2人×5。
     APIはトリオショーダウンを battle.mode=duoShowdown、別モードの hunterSurvivor を soloShowdown として返すことがあるので、
     人数の形でも弾く（event.mode を持たない古いレコードもこれで判定できる）。"""
+    if mode not in SHOWDOWN_MODES or not isinstance(teams, list):
+        return False
     size, count = (1, 10) if mode == "soloShowdown" else (2, 5)
-    return len(teams) == count and all(len(t) == size for t in teams)
+    return len(teams) == count and all(isinstance(t, list) and len(t) == size for t in teams)
 
 
-def normalize(b):
+def valid_match(match):
+    """保存済みの試合にも収集時と同じモード・種別・人数の条件を適用する。
+
+    古いレコードには eventMode がないため、その場合だけ既存の mode と人数で判定する。
+    eventMode を保存しているレコードでは、別イベントや不明なイベントを再び混ぜない。
+    """
+    mode = match.get("mode")
+    return (
+        match.get("type") == "ranked"
+        and valid_shape(mode, match.get("teams"))
+        and ("eventMode" not in match or match["eventMode"] == mode)
+    )
+
+
+def normalize(b, source_tag=None):
     """battlelogの1件をショーダウンの試合レコードに変換。対象外ならNone。"""
     battle = b.get("battle", {})
     event_mode = b.get("event", {}).get("mode")
@@ -86,15 +102,26 @@ def normalize(b):
     if not out:
         return None
     tags = sorted(p["tag"] for t in out for p in t)
-    return {
+    record = {
         "id": b["battleTime"] + "|" + ",".join(tags),
         "time": b["battleTime"],
         "mode": mode,
+        "eventMode": event_mode,
         "type": battle.get("type"),
         "map": b.get("event", {}).get("map"),
         "mapId": b.get("event", {}).get("id"),
         "teams": out,
     }
+    if source_tag is not None:
+        # 取得元プレイヤーの確定順位で配列順を照合する。合わない試合も使用数には残すが、
+        # 順位の集計には使わない（取得元の順位を他の参加者へ割り当てない）。
+        rank = battle.get("rank")
+        record["rankOrderValid"] = (
+            type(rank) is int
+            and 1 <= rank <= len(out)
+            and any(p["tag"] == source_tag for p in out[rank - 1])
+        )
+    return record
 
 
 def main():
@@ -139,14 +166,14 @@ def main():
         while queue and done < args.max_players:
             batch = [queue.pop(0) for _ in range(min(args.workers * 4, len(queue), args.max_players - done))]
             done += len(batch)
-            for log in pool.map(lambda tag: get(f"/players/{tag_path(tag)}/battlelog") or {}, batch):
+            for source_tag, log in zip(batch, pool.map(lambda tag: get(f"/players/{tag_path(tag)}/battlelog") or {}, batch)):
                 for b in log.get("items", []):
                     battle = b.get("battle", {})
                     for p in battle.get("players", []) + [p for t in battle.get("teams", []) for p in t]:
                         # 名前はサイトでアカウントを出す高トロフィー帯の分だけ残す
                         if p.get("name") and p.get("brawler", {}).get("trophies", 0) >= NAME_MIN_TROPHIES:
                             names[p["tag"]] = p["name"]
-                    rec = normalize(b)
+                    rec = normalize(b, source_tag)
                     if not rec or rec["id"] in seen or rec["time"] < since:
                         continue
                     seen.add(rec["id"])

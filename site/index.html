@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="theme.js"></script>
+<link rel="stylesheet" href="theme.css">
 <title>ブロスタ バトロワ使用率｜最強キャラ・組み合わせの統計ツール（ソロ・デュオ）</title>
 <meta name="description" content="ブロスタ（Brawl Stars）のバトルロワイヤル（ソロ・デュオショーダウン）で、高トロフィー帯によく使われている最強キャラとデュオの組み合わせをマップ別にランキング。トロフィー帯・期間で絞り込めます。公式APIの実戦データを1時間ごとに自動更新。">
 <link rel="canonical" href="https://brawl.kdking-tools.com/">
@@ -19,25 +21,8 @@
 <style>
 /* Layout: 1カラムの操作盤。上にマップ・期間・レート帯の絞り込み、下にランキング表。 */
 :root {
-  --bg: #f3f5f9;
-  --panel: #ffffff;
-  --fg: #1b2333;
-  --muted: #5d6779;
-  --line: #dde2ec;
-  --accent: #e2a500;
-  --accent-ink: #2a1f00;
-  --bar: #3b6fd8;
-  --bar-soft: #dbe5fa;
   --font-display: "Dela Gothic One", "Hiragino Sans", "Yu Gothic", sans-serif;
   --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
-}
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #12161f; --panel: #1b2130; --fg: #e8ecf4; --muted: #9aa4b8; --line: #2c3446;
-  --accent: #f2b81c; --accent-ink: #1c1400; --bar: #6f9bf0; --bar-soft: #263451; color-scheme: dark;
-} }
-:root[data-theme="dark"] {
-  --bg: #12161f; --panel: #1b2130; --fg: #e8ecf4; --muted: #9aa4b8; --line: #2c3446;
-  --accent: #f2b81c; --accent-ink: #1c1400; --bar: #6f9bf0; --bar-soft: #263451; color-scheme: dark;
 }
 body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.6; }
 .wrap { max-width: 860px; margin: 0 auto; padding-block: 28px 48px;
@@ -66,6 +51,7 @@ td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: mid
 td.rank { width: 2.5em; color: var(--muted); }
 td.name { font-weight: 700; }
 td.num { text-align: right; width: 5em; }
+th.placement, td.placement { white-space: nowrap; }
 td.barcell { width: 40%; min-width: 120px; }
 .bar { height: 10px; background: var(--bar-soft); border-radius: 5px; overflow: hidden; }
 .bar > span { display: block; height: 100%; background: var(--bar); border-radius: 5px; }
@@ -126,13 +112,19 @@ header { display: flex; flex-wrap: wrap; justify-content: space-between; align-i
       <p class="sub" id="period" data-i18n="loading">データを読み込んでいます</p>
       <p class="sub" id="updated" hidden></p>
     </div>
-    <label class="lang"><span aria-hidden="true">🌐</span><select id="lang" aria-label="Language">
+    <div class="header-tools">
+      <div class="theme-switch" data-theme-switch role="group" aria-label="カラーテーマ" hidden>
+        <button type="button" data-set-theme="dark" aria-pressed="false"><span class="theme-swatch" aria-hidden="true"></span><span data-theme-label>ブラック</span></button>
+        <button type="button" data-set-theme="light" aria-pressed="false"><span class="theme-swatch" aria-hidden="true"></span><span data-theme-label>ホワイト</span></button>
+      </div>
+      <label class="lang"><span aria-hidden="true">🌐</span><select id="lang" aria-label="Language">
         <option value="ja">日本語</option>
         <option value="en">English</option>
         <option value="zh">简体中文</option>
         <option value="ko">한국어</option>
       </select>
-    </label>
+      </label>
+    </div>
   </header>
   <div class="notice" id="sampleNotice" data-i18n="sample" hidden>これは画面確認用のダミーデータです。実際の使用率ではありません。</div>
 
@@ -175,7 +167,7 @@ header { display: flex; flex-wrap: wrap; justify-content: space-between; align-i
 
   <div class="summary" id="summary"></div>
   <div class="table-wrap"><table>
-    <thead><tr><th>#</th><th id="colName"></th><th class="num" data-i18n="uses">使用数</th><th class="num" data-i18n="share">割合</th><th></th></tr></thead>
+    <thead><tr><th>#</th><th id="colName"></th><th class="num" data-i18n="uses">使用数</th><th class="num" data-i18n="share">割合</th><th class="num placement" data-i18n="avgPlace">平均順位</th><th></th></tr></thead>
     <tbody id="rows"></tbody>
   </table></div>
 
@@ -347,6 +339,9 @@ function num(v) { return v === "" ? null : Number(v); }
 function inBand(t, lo, hi) { return (lo === null || t >= lo) && (hi === null || t <= hi); }
 function fmtDay(d) { const s = String(d); return `${s.slice(0, 4)}/${s.slice(4, 6)}/${s.slice(6, 8)}`; }
 function fmtNum(n) { return n.toLocaleString(lang); }
+function fmtPlace(sum, n) {
+  return Number.isFinite(sum) && n > 0 ? `${(sum / n).toFixed(1)}/${state.view === "solo" ? 10 : 5}` : "—";
+}
 function escapeHtml(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
 // 期間・マップで絞り込む（各行の先頭は [マップ, 日付, ...]）
@@ -365,17 +360,22 @@ function icon(b, cls = "icon") {
 
 // 使用数は (マップ, 日付, キャラ, トロフィー帯) ごとに数えた行で届く。トロフィー帯は data.bucket 刻みの下限値。
 // solo/duo: [マップ, 日付, キャラ, 帯, 使用数]、pair: [マップ, 日付, キャラA, キャラB, 平均の帯, チーム数]
+// rankSums は使用数の各行に対応する順位合計。未収録または順位不明の行を含むときは平均順位を表示しない。
 function tally() {
   const d = state.data, lo = num($("min").value), hi = num($("max").value);
-  const counts = new Map();
-  const add = (k, n) => counts.set(k, (counts.get(k) || 0) + n);
+  const counts = new Map(), places = new Map();
+  const sums = d.rankSums?.[state.view] || [];
+  const add = (k, n, sum) => {
+    counts.set(k, (counts.get(k) || 0) + n);
+    places.set(k, Number.isFinite(sum) && places.get(k) !== null ? (places.get(k) || 0) + sum : null);
+  };
   if (state.view === "pair") {
-    for (const r of d.pair) if (inScope(r) && inBand(r[4], lo, hi)) add(r[2] + "," + r[3], r[5]);
+    for (const [i, r] of d.pair.entries()) if (inScope(r) && inBand(r[4], lo, hi)) add(r[2] + "," + r[3], r[5], sums[i]);
   } else {
-    for (const r of d[state.view]) if (inScope(r) && inBand(r[3], lo, hi)) add(r[2], r[4]);
+    for (const [i, r] of d[state.view].entries()) if (inScope(r) && inBand(r[3], lo, hi)) add(r[2], r[4], sums[i]);
   }
   const total = [...counts.values()].reduce((s, n) => s + n, 0);
-  return { rows: [...counts.entries()].sort((x, y) => y[1] - x[1]), total };
+  return { rows: [...counts.entries()].sort((x, y) => y[1] - x[1]).map(([key, n]) => [key, n, places.get(key)]), total };
 }
 
 // そのキャラ（組み合わせ）を使っていたアカウントを、今の絞り込み条件で集計する
@@ -387,7 +387,9 @@ function accounts(key) {
   const acc = new Map();
   const add = (k, tr, place) => {
     const a = acc.get(k) || { n: 0, max: 0, places: 0 };
-    a.n++; a.max = Math.max(a.max, tr); a.places += place; acc.set(k, a);
+    a.n++; a.max = Math.max(a.max, tr);
+    a.places = Number.isFinite(place) && a.places !== null ? a.places + place : null;
+    acc.set(k, a);
   };
   const [ka, kb] = String(key).split(",").map(Number);
   for (const r of state.data.accounts[state.view]) {
@@ -415,7 +417,7 @@ function renderAccounts(key) {
   if (!list.length) return `<p class="rule">${t("noAccounts", { n: state.data.pairAccountGames || 1 })}</p>`;
   const rows = list.slice(0, 30).map(([k, a]) => `<tr><td>${pair ? (() => { const [pa, pb] = k.split(",").map(Number), [ka, kb] = String(key).split(",").map(Number);
     return `<div class="team"><div class="who">${icon(ka, "icon sm")}${playerLabel(pa)}</div><div class="who">${icon(kb, "icon sm")}${playerLabel(pb)}</div></div>`; })() : playerLabel(k)}</td>
-    <td class="num">${a.n}</td><td class="num">${fmtNum(a.max)}</td><td class="num">${(a.places / a.n).toFixed(1)}</td></tr>`).join("");
+    <td class="num">${a.n}</td><td class="num">${fmtNum(a.max)}</td><td class="num placement">${fmtPlace(a.places, a.n)}</td></tr>`).join("");
   return `<div class="accounts"><table><thead><tr><th>${t(pair ? "team" : "account")}（${fmtNum(list.length)}）</th><th class="num">${t("acUses")}</th><th class="num">${t(pair ? "maxAvgTrophy" : "maxTrophy")}</th><th class="num">${t("avgPlace")}</th></tr></thead>
     <tbody>${rows}</tbody></table>${list.length > 30 ? `<p class="rule">${t("top30")}</p>` : ""}</div>`;
 }
@@ -478,7 +480,7 @@ function render() {
   const br = state.data.brawlers;
   const top = rows.slice(0, LIMIT[state.view]);
   const max = top.length ? top[0][1] : 1;
-  $("rows").innerHTML = top.length ? top.map(([key, n], i) => {
+  $("rows").innerHTML = top.length ? top.map(([key, n, placeSum], i) => {
     let who;
     if (state.view === "pair") {
       const [a, b] = key.split(",").map(Number);
@@ -490,9 +492,10 @@ function render() {
     const rowAttr = showAcc ? `class="row ${i < 3 ? "top" : ""}" data-key="${key}" aria-expanded="${open}" tabindex="0"` : `class="${i < 3 ? "top" : ""}"`;
     return `<tr ${rowAttr}><td class="rank">${i + 1}</td><td class="name"><div class="who">${who}</div></td>
     <td class="num">${fmtNum(n)}</td><td class="num">${(n / total * 100).toFixed(1)}%</td>
+    <td class="num placement">${fmtPlace(placeSum, n)}</td>
     <td class="barcell"><div class="bar"><span style="width:${(n / max * 100).toFixed(1)}%"></span></div></td></tr>` +
-      (open ? `<tr class="detail"><td></td><td colspan="4">${renderAccounts(key)}</td></tr>` : "");
-  }).join("") : `<tr><td colspan="5" class="empty">${t("empty")}</td></tr>`;
+      (open ? `<tr class="detail"><td></td><td colspan="5">${renderAccounts(key)}</td></tr>` : "");
+  }).join("") : `<tr><td colspan="6" class="empty">${t("empty")}</td></tr>`;
   for (const btn of document.querySelectorAll("[data-view]")) btn.setAttribute("aria-pressed", btn.dataset.view === state.view);
   for (const c of document.querySelectorAll("#trophyChips button"))
     c.setAttribute("aria-pressed", c.dataset.min === $("min").value && c.dataset.max === $("max").value);
