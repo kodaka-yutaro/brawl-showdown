@@ -18,7 +18,7 @@ from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from collect import valid_shape
+from collect import valid_match
 
 ROOT = Path(__file__).parent
 JST = timezone(timedelta(hours=9))
@@ -46,9 +46,9 @@ def main():
     with gzip.open(args.src, "rt") as f:
         matches = [json.loads(line) for line in f if line.strip()]
     # トロフィー戦と確認できない試合（種別を記録していない古いレコード、他モード、フレンドバトル）を除く
-    bad = [m for m in matches if not valid_shape(m["mode"], m["teams"]) or m.get("type") != "ranked"]
+    bad = [m for m in matches if not valid_match(m)]
     if bad:
-        matches = [m for m in matches if valid_shape(m["mode"], m["teams"]) and m.get("type") == "ranked"]
+        matches = [m for m in matches if valid_match(m)]
         with gzip.open(args.src, "wt") as f:
             for m in matches:
                 f.write(json.dumps(m, ensure_ascii=False, separators=(",", ":")) + "\n")
@@ -125,6 +125,13 @@ def main():
     # アカウント表示用の個別の使用（ACCOUNT_MIN 以上）だけは1件ずつ持つ。
     show_from = newest - timedelta(days=args.days)
     count = {"solo": Counter(), "duo": Counter(), "pair": Counter(), "matches": Counter()}
+    rank_sums = {"solo": Counter(), "duo": Counter(), "pair": Counter()}
+
+    def add_use(view, key, place):
+        count[view][key] += 1
+        previous = rank_sums[view][key]
+        rank_sums[view][key] = None if place is None or previous is None else previous + place
+
     acc = {"solo": [], "duo": [], "pair": []}
     pair_uses, pair_games = [], Counter()
     days = set()
@@ -138,18 +145,20 @@ def main():
         mi = midx(m)
         solo = m["mode"] == "soloShowdown"
         count["matches"][("solo" if solo else "duo", mi, day)] += 1
-        for place, team in enumerate(m["teams"], start=1):
+        for order, team in enumerate(m["teams"], start=1):
+            # 旧レコードは従来の配列順。APIの順位との照合が不一致なら、使用数を残して順位だけ欠損にする。
+            place = None if m.get("rankOrderValid") is False else order
             if solo:
                 p = team[0]
-                count["solo"][(mi, day, idx(p), band(p["trophies"]))] += 1
+                add_use("solo", (mi, day, idx(p), band(p["trophies"])), place)
                 if (pi := pidx(p)) >= 0:
                     acc["solo"].append([mi, day, idx(p), pi, p["trophies"], place])
                 continue
             a, b = sorted(team, key=lambda p: p["brawler"])
             avg = (a["trophies"] + b["trophies"]) // 2
-            count["pair"][(mi, day, idx(a), idx(b), band(avg))] += 1
+            add_use("pair", (mi, day, idx(a), idx(b), band(avg)), place)
             for p in (a, b):
-                count["duo"][(mi, day, idx(p), band(p["trophies"]))] += 1
+                add_use("duo", (mi, day, idx(p), band(p["trophies"])), place)
                 if (pi := pidx(p)) >= 0:
                     acc["duo"].append([mi, day, idx(p), pi, p["trophies"], place])
             pair_games[(idx(a), idx(b), a["tag"], b["tag"])] += 1
@@ -175,6 +184,9 @@ def main():
         "solo": rows(count["solo"]),
         "duo": rows(count["duo"]),
         "pair": rows(count["pair"]),
+        # solo/duo/pair の各行と同じ順の順位合計（順位を確認できない試合を含む行は null）。
+        # 絞り込み後に使用数で割り、試合数で重み付けした平均を出す。
+        "rankSums": {view: [rank_sums[view][key] for key in count[view]] for view in rank_sums},
         # [マップ, 日付, キャラ, プレイヤー, トロフィー, 順位]（pair は [マップ, 日付, キャラA, キャラB, キャラAのプレイヤー, キャラBのプレイヤー, チーム平均トロフィー, 順位]）
         "accounts": acc,
     }

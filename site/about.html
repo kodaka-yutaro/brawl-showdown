@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="theme.js"></script>
+<link rel="stylesheet" href="theme.css">
 <title>運営者情報・お問い合わせ | ブロスタ バトロワ使用率</title>
 <meta name="description" content="ブロスタのバトルロワイヤル（ショーダウン）統計サイト「バトロワ使用率」の運営者情報とお問い合わせ先です。">
 <link rel="canonical" href="https://brawl.kdking-tools.com/about.html">
 <style>
-:root{--bg:#f3f5f9;--panel:#fff;--fg:#1b2333;--muted:#5d6779;--line:#dde2ec}
-@media (prefers-color-scheme:dark){:root{--bg:#12161f;--panel:#1b2130;--fg:#e8ecf4;--muted:#9aa4b8;--line:#2c3446;color-scheme:dark}}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:"Hiragino Sans","Yu Gothic",system-ui,sans-serif;line-height:1.7}
 main{max-width:760px;margin:0 auto;padding:24px 16px 40px}
 h1{font-size:1.4rem;margin:0 0 16px} h2{font-size:1.1rem;margin:24px 0 6px}
@@ -17,7 +17,13 @@ a{color:inherit} footer{font-size:.82rem;color:var(--muted);border-top:1px solid
 </head>
 <body>
 <main>
+<header class="page-header">
 <h1>運営者情報</h1>
+<div class="theme-switch" data-theme-switch role="group" aria-label="カラーテーマ" hidden>
+  <button type="button" data-set-theme="dark" aria-pressed="false"><span class="theme-swatch" aria-hidden="true"></span><span data-theme-label>ブラック</span></button>
+  <button type="button" data-set-theme="light" aria-pressed="false"><span class="theme-swatch" aria-hidden="true"></span><span data-theme-label>ホワイト</span></button>
+</div>
+</header>
 <p>サイト名：バトロワ使用率<br>運営者：kdking<br>URL：<a href="https://brawl.kdking-tools.com/">https://brawl.kdking-tools.com/</a></p>
 <p>ブロスタのソロ・デュオバトルロワイヤル（ショーダウン）で、高いトロフィー帯でよく使われているキャラを調べるための無料サイトとして、個人で開発・運営しています。</p>
 <h2>お問い合わせ</h2>
