@@ -47,7 +47,7 @@ jobs:
           BRAWL_API_KEY: ${{ secrets.BRAWL_API_KEY }}
         run: python3 collect.py --max-players 3000
       - name: サイト用データを作る
-        run: python3 build_data.py --days 7 --keep-days 7
+        run: python3 build_data.py --days 10 --keep-days 10
       - name: 保存データを圧縮・分割して検証
         run: python3 data_storage.py pack
       - name: 試合データを data ブランチに保存

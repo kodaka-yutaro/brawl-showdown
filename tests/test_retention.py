@@ -10,11 +10,11 @@ from test_average_rank import match
 
 
 class RetentionTests(unittest.TestCase):
-    def test_seven_day_boundary_and_persisted_cleanup(self):
+    def test_ten_day_boundary_and_persisted_cleanup(self):
         with tempfile.TemporaryDirectory() as directory:
             src = Path(directory) / "battles.jsonl.gz"
             records = []
-            for i, stamp in enumerate(("20261022T120000.000Z", "20261015T120000.000Z", "20261015T115959.000Z")):
+            for i, stamp in enumerate(("20261022T120000.000Z", "20261012T120000.000Z", "20261012T115959.000Z")):
                 record = match("solo", i, 1)
                 record["time"] = stamp
                 record["id"] = stamp + "|" + record["id"].split("|", 1)[1]
@@ -24,12 +24,12 @@ class RetentionTests(unittest.TestCase):
             with gzip.open(src, "wt") as f:
                 for record in records + [records[0], invalid]:
                     f.write(json.dumps(record) + "\n")
-            kept, latest = load_matches(src, 7)
+            kept, latest = load_matches(src, 10)
             self.assertEqual(latest.strftime("%Y%m%dT%H%M%S"), "20261022T120000")
             self.assertEqual([json.loads(line)["time"] for line in kept], [records[1]["time"], records[0]["time"]])
             with gzip.open(src, "rt") as f:
                 self.assertEqual(f.readlines(), kept)
-            self.assertEqual(load_matches(src, 7)[0], kept)
+            self.assertEqual(load_matches(src, 10)[0], kept)
 
     def test_keep_zero_keeps_old_records(self):
         with tempfile.TemporaryDirectory() as directory:

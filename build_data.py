@@ -5,9 +5,9 @@
 試合日は日本時間の YYYYMMDD（整数）で持つ。
 
 使い方:
-  python3 build_data.py [--days 7] [--keep-days 7] [--sample]
+  python3 build_data.py [--days 10] [--keep-days 10] [--sample]
 
---days: 最新の試合から何日前までをサイトに載せるか（既定7日）
+--days: 最新の試合から何日前までをサイトに載せるか（既定10日）
 --keep-days: battles.jsonl に残す期間。これより古い試合はファイルから削除する（0なら削除しない）
 """
 import argparse
@@ -77,8 +77,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--src", default=ROOT / "data" / "battles.jsonl.gz", type=Path)
     ap.add_argument("--dst", default=ROOT / "site" / "data.json", type=Path)
-    ap.add_argument("--days", type=int, default=7)
-    ap.add_argument("--keep-days", type=int, default=7)
+    ap.add_argument("--days", type=int, default=10)
+    ap.add_argument("--keep-days", type=int, default=10)
     ap.add_argument("--sample", action="store_true", help="画面確認用のダミーデータとして印をつける")
     args = ap.parse_args()
 
