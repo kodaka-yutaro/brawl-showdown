@@ -87,6 +87,11 @@ def main():
     brawler_local = json.loads(brawler_names_file.read_text()) if brawler_names_file.exists() else {}
     names_file = args.src.parent / "names.json"
     player_names = json.loads(names_file.read_text()) if names_file.exists() else {}
+    # 保存中の試合に登場する名前だけ残し、他モードや保存期間外の名前の増加を防ぐ。
+    active_tags = {p["tag"] for m in matches for team in m["teams"] for p in team}
+    player_names = {tag: name for tag, name in player_names.items() if tag in active_tags}
+    names_file.write_text(json.dumps(player_names, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    del active_tags
 
     names, index = [], {}
     maps, map_index = [], {}

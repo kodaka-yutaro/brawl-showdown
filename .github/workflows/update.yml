@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["site/**", "build_data.py", "i18n/**"]
+    paths: ["site/**", "build_data.py", "collect.py", "data_storage.py", "i18n/**", "tests/**", ".github/workflows/update.yml"]
 
 permissions:
   contents: write
@@ -20,6 +20,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
@@ -28,26 +29,37 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: 回帰テスト
+        run: |
+          python3 -m unittest discover -s tests -v
+          node tests/test_rank_frontend.js
       # 試合データは履歴を増やさないよう data ブランチ（毎回1コミットに置き換え）に置く
       - name: これまでの試合データを取り出す
+        id: previous
         run: |
-          if git fetch --depth 1 origin data; then git checkout FETCH_HEAD -- data/; fi
+          git fetch --depth 1 origin data
+          echo "sha=$(git rev-parse FETCH_HEAD)" >> "$GITHUB_OUTPUT"
+          git checkout FETCH_HEAD -- data/
+          python3 data_storage.py restore
       - name: 試合データを集める
-        if: github.event_name != 'push'
         env:
           BRAWL_API_KEY: ${{ secrets.BRAWL_API_KEY }}
         run: python3 collect.py --max-players 3000
       - name: サイト用データを作る
-        run: if [ -f data/battles.jsonl.gz ]; then python3 build_data.py; fi
+        run: python3 build_data.py
+      - name: 保存データを圧縮・分割して検証
+        run: python3 data_storage.py pack
       - name: 試合データを data ブランチに保存
-        if: github.event_name != 'push'
+        env:
+          PREVIOUS_DATA_SHA: ${{ steps.previous.outputs.sha }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
           export GIT_INDEX_FILE="$RUNNER_TEMP/data-index"
-          git add -f data/battles.jsonl.gz data/names.json data/brawlers.json
+          git read-tree --empty
+          git add -f data/archive/
           commit=$(git commit-tree "$(git write-tree)" -m "データ更新 $(date -u +%Y-%m-%dT%H:%MZ)")
-          git push -f origin "$commit:refs/heads/data"
+          git push --force-with-lease="refs/heads/data:$PREVIOUS_DATA_SHA" origin "$commit:refs/heads/data"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

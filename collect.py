@@ -168,13 +168,15 @@ def main():
             done += len(batch)
             for source_tag, log in zip(batch, pool.map(lambda tag: get(f"/players/{tag_path(tag)}/battlelog") or {}, batch)):
                 for b in log.get("items", []):
+                    rec = normalize(b, source_tag)
+                    if not rec or rec["time"] < since:
+                        continue
                     battle = b.get("battle", {})
                     for p in battle.get("players", []) + [p for t in battle.get("teams", []) for p in t]:
-                        # 名前はサイトでアカウントを出す高トロフィー帯の分だけ残す
+                        # 対象のショーダウン参加者だけ保存。重複試合でも名前は更新する。
                         if p.get("name") and p.get("brawler", {}).get("trophies", 0) >= NAME_MIN_TROPHIES:
                             names[p["tag"]] = p["name"]
-                    rec = normalize(b, source_tag)
-                    if not rec or rec["id"] in seen or rec["time"] < since:
+                    if rec["id"] in seen:
                         continue
                     seen.add(rec["id"])
                     f.write(json.dumps(rec, ensure_ascii=False, separators=(",", ":")) + "\n")
