@@ -5,9 +5,9 @@
 試合日は日本時間の YYYYMMDD（整数）で持つ。
 
 使い方:
-  python3 build_data.py [--days 14] [--keep-days 14] [--sample]
+  python3 build_data.py [--days 7] [--keep-days 7] [--sample]
 
---days: 最新の試合から何日前までをサイトに載せるか（ページでは既定で直近7日を表示し、それより前は期間を広げて見る）
+--days: 最新の試合から何日前までをサイトに載せるか（既定7日）
 --keep-days: battles.jsonl に残す期間。これより古い試合はファイルから削除する（0なら削除しない）
 """
 import argparse
@@ -34,49 +34,57 @@ def parse_time(s):
     return datetime.strptime(s[:15], "%Y%m%dT%H%M%S").replace(tzinfo=timezone.utc)
 
 
+def load_matches(src, keep_days):
+    # 展開した全参加者の辞書を保持せず、JSON文字列でソート・保持する。
+    # 参加者辞書は集計する1試合分だけを展開し、数百万個の辞書の常駐を避ける。
+    matches, bad = [], 0
+    with gzip.open(src, "rt", encoding="utf-8") as f:
+        for line in f:
+            if not line.strip():
+                continue
+            record = json.loads(line)
+            if not valid_match(record):
+                bad += 1
+                continue
+            matches.append((record["time"], line.rstrip("\n") + "\n"))
+    matches.sort(key=lambda item: item[0])
+    last, uniq = {}, []
+    for stamp, line in matches:
+        m = json.loads(line)
+        key = (m["mode"], m["id"].split("|", 1)[1])
+        t = parse_time(stamp)
+        if key in last and t - last[key] <= timedelta(minutes=5):
+            continue
+        last[key] = t
+        uniq.append((stamp, line))
+    duplicates = len(matches) - len(uniq)
+    if not uniq:
+        raise ValueError("No valid showdown matches to publish")
+    newest = parse_time(uniq[-1][0])
+    keep_from = (newest - timedelta(days=keep_days)).strftime("%Y%m%dT%H%M%S") if keep_days else ""
+    kept = [line for stamp, line in uniq if stamp >= keep_from]
+    pruned = len(uniq) - len(kept)
+    if bad or duplicates or pruned:
+        temp = src.with_suffix(src.suffix + ".tmp")
+        with gzip.open(temp, "wt", encoding="utf-8") as f:
+            f.writelines(kept)
+        temp.replace(src)
+    print(f"retained {len(kept)} matches; removed {bad} invalid, {duplicates} duplicates, {pruned} older than {keep_days} days")
+    return kept, newest
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--src", default=ROOT / "data" / "battles.jsonl.gz", type=Path)
     ap.add_argument("--dst", default=ROOT / "site" / "data.json", type=Path)
-    ap.add_argument("--days", type=int, default=14)
-    ap.add_argument("--keep-days", type=int, default=14)
+    ap.add_argument("--days", type=int, default=7)
+    ap.add_argument("--keep-days", type=int, default=7)
     ap.add_argument("--sample", action="store_true", help="画面確認用のダミーデータとして印をつける")
     args = ap.parse_args()
 
-    with gzip.open(args.src, "rt") as f:
-        matches = [json.loads(line) for line in f if line.strip()]
-    # トロフィー戦と確認できない試合（種別を記録していない古いレコード、他モード、フレンドバトル）を除く
-    bad = [m for m in matches if not valid_match(m)]
-    if bad:
-        matches = [m for m in matches if valid_match(m)]
-        with gzip.open(args.src, "wt") as f:
-            for m in matches:
-                f.write(json.dumps(m, ensure_ascii=False, separators=(",", ":")) + "\n")
-        print(f"removed {len(bad)} matches that are not solo/duo showdown")
-    # 同じ試合を別のプレイヤーの戦績から拾うと終了時刻が数分ずれることがあるので、
-    # 同じモード・同じ顔ぶれで5分以内の試合は1試合として数える
-    last, uniq = {}, []
-    for m in sorted(matches, key=lambda m: m["time"]):
-        key = (m["mode"], m["id"].split("|", 1)[1])
-        t = parse_time(m["time"])
-        if key in last and t - last[key] <= timedelta(minutes=5):
-            continue
-        last[key] = t
-        uniq.append(m)
-    if len(uniq) != len(matches):
-        print(f"merged {len(matches) - len(uniq)} duplicate matches")
-    matches = uniq
-    newest = max(parse_time(m["time"]) for m in matches)
-
-    if args.keep_days:
-        keep_from = newest - timedelta(days=args.keep_days)
-        kept = [m for m in matches if parse_time(m["time"]) >= keep_from]
-        if len(kept) != len(matches):
-            with gzip.open(args.src, "wt") as f:
-                for m in kept:
-                    f.write(json.dumps(m, ensure_ascii=False, separators=(",", ":")) + "\n")
-            print(f"pruned {len(matches) - len(kept)} matches older than {args.keep_days} days")
-        matches = kept
+    if args.days <= 0 or args.keep_days < 0:
+        ap.error("--days must be positive and --keep-days must be nonnegative")
+    matches, newest = load_matches(args.src, args.keep_days)
 
     ids_file = args.src.parent / "brawlers.json"
     brawler_ids = json.loads(ids_file.read_text()) if ids_file.exists() else {}
@@ -88,7 +96,7 @@ def main():
     names_file = args.src.parent / "names.json"
     player_names = json.loads(names_file.read_text()) if names_file.exists() else {}
     # 保存中の試合に登場する名前だけ残し、他モードや保存期間外の名前の増加を防ぐ。
-    active_tags = {p["tag"] for m in matches for team in m["teams"] for p in team}
+    active_tags = {p["tag"] for line in matches for team in json.loads(line)["teams"] for p in team}
     player_names = {tag: name for tag, name in player_names.items() if tag in active_tags}
     names_file.write_text(json.dumps(player_names, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     del active_tags
@@ -141,7 +149,8 @@ def main():
     pair_uses, pair_games = [], Counter()
     days = set()
     band = lambda tr: tr // BUCKET * BUCKET
-    for m in matches:
+    for line in matches:
+        m = json.loads(line)
         t = parse_time(m["time"])
         if t < show_from:
             continue
@@ -167,10 +176,11 @@ def main():
                 if (pi := pidx(p)) >= 0:
                     acc["duo"].append([mi, day, idx(p), pi, p["trophies"], place])
             pair_games[(idx(a), idx(b), a["tag"], b["tag"])] += 1
-            pair_uses.append((mi, day, a, b, avg, place))
-    for mi, day, a, b, avg, place in pair_uses:
-        if pair_games[(idx(a), idx(b), a["tag"], b["tag"])] >= PAIR_ACCOUNT_GAMES:
-            acc["pair"].append([mi, day, idx(a), idx(b), pidx(a, need_min=False), pidx(b, need_min=False), avg, place])
+            pair_uses.append((mi, day, idx(a), idx(b), a["tag"], b["tag"], a.get("name"), b.get("name"), avg, place))
+    for mi, day, ai, bi, atag, btag, aname, bname, avg, place in pair_uses:
+        if pair_games[(ai, bi, atag, btag)] >= PAIR_ACCOUNT_GAMES:
+            a, b = {"tag": atag, "name": aname}, {"tag": btag, "name": bname}
+            acc["pair"].append([mi, day, ai, bi, pidx(a, need_min=False), pidx(b, need_min=False), avg, place])
     rows = lambda c: [[*k, n] for k, n in c.items()]
     out = {
         "sample": args.sample,

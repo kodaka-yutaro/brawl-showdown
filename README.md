@@ -6,7 +6,7 @@ https://brawl.kdking-tools.com/
 
 - `collect.py`: 世界と14地域のランキング上位、その対戦相手の battlelog から直近7日のソロ・デュオショーダウン（トロフィー戦のみ）の試合を8並列で集め、`data/battles.jsonl.gz` に追記する。キャラIDを `data/brawlers.json`、対象試合の参加者名を `data/names.json` に保存
   - APIはトリオを `duoShowdown`、hunterSurvivor を `soloShowdown` として返すので、`event.mode`・`type=ranked`・人数（ソロ1人×10、デュオ2人×5）で判定する
-- `build_data.py`: `data/battles.jsonl.gz` から直近14日分の `site/data.json` を作る（14日より古い試合は削除）。試合が増えてもページが重くならないよう、使用数は (マップ, 日付, キャラ, 50刻みのトロフィー帯) ごとに数えて持つ。ページは既定で直近7日を表示し、期間を広げるとバランス調整前と比べられる
+- `build_data.py`: `data/battles.jsonl.gz` から直近7日分の `site/data.json` を作る。最新試合から7日（168時間）より古い試合と、その試合にしか登場しないプレイヤー名は更新時に自動削除する。使用数は (マップ, 日付, キャラ, 50刻みのトロフィー帯) ごとに集約。全参加者の辞書を同時に展開しないことで、集計時のメモリ使用量を抑える
 - `i18n/map-names.json`: マップ名の日本語・中国語・韓国語（ゲームの翻訳ファイル `localization/*.csv` と `csv_logic/locations.csv` から作成。英語名がキー）
 - `site/`: 公開するページ（GitHub Pages）。キャラ・マップ画像は Brawlify の CDN から読む（読めなければ頭文字で代用）。キャラトロフィー3000以上で絞ったときだけ、行を押すと使っていたアカウントを出す
 - `data_storage.py`: Git保存用にJSONをgzip圧縮し、試合データを含む全ファイルを32 MiB以下に分割する。`data/archive/manifest.json` にサイズ・SHA-256を保存し、復元時に検証。旧形式は初回保存時に自動移行する。作業用の展開ファイルはGitに保存しない

@@ -3,8 +3,8 @@
 使い方:
   BRAWL_API_KEY=... python3 collect.py [--countries global,jp,...] [--max-players 3000] [--workers 8] [--days 7]
 
-直近 --days 日（既定7日）の試合だけを追記する。過去の実行で集めた試合は残るので、
-繰り返し実行すればバランス調整の前後を比べられる。
+直近 --days 日（既定7日）の試合だけを追記する。
+公開用の集計時に、保存期間（既定7日）より古い試合と不要な名前を削除する。
 
 APIキーは「APIを呼ぶ側のIP」でしか使えない。既定ではRoyaleAPIの公開プロキシ
 (https://bsproxy.royaleapi.dev/v1) を経由するので、キー作成時にプロキシのIPを登録しておく。
