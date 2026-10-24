@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "files": {
+    "battles.jsonl.gz": {
+      "codec": "identity",
+      "size": 209279674,
+      "parts": [
+        {
+          "name": "battles.jsonl.gz.00000.part",
+          "size": 33554432,
+          "sha256": "b3ab5a1d4b26fe2d156046e2ca1fae3859734f329eb5cc084d387c26625ef046"
+        },
+        {
+          "name": "battles.jsonl.gz.00001.part",
+          "size": 33554432,
+          "sha256": "545e39ae416f141e20b3188e53c02d383ee256e80fb469a77328c526538fff01"
+        },
+        {
+          "name": "battles.jsonl.gz.00002.part",
+          "size": 33554432,
+          "sha256": "cce99d3e20572915fc3f2dceef2f5cbcdfde0cdffeffe0663bb295549000775f"
+        },
+        {
+          "name": "battles.jsonl.gz.00003.part",
+          "size": 33554432,
+          "sha256": "4f0def388cd75e40082f2cdd93f9de09a8ce1825f5f6a06848a85d664cff0738"
+        },
+        {
+          "name": "battles.jsonl.gz.00004.part",
+          "size": 33554432,
+          "sha256": "364bb25ba6b723bb0bf94cc3b0bd0b68f05cec1c10c47293e1d99f4a1bbaa6b8"
+        },
+        {
+          "name": "battles.jsonl.gz.00005.part",
+          "size": 33554432,
+          "sha256": "fa019f3b4432bffb539bedf1e343c145618a1d47c094060a7567cf54893bb579"
+        },
+        {
+          "name": "battles.jsonl.gz.00006.part",
+          "size": 7953082,
+          "sha256": "12e4880c930c44c92f4b569262b6e67a4116b4a8114d1e9295f68989a4193f6f"
+        }
+      ]
+    },
+    "names.json": {
+      "codec": "gzip",
+      "size": 86175221,
+      "parts": [
+        {
+          "name": "names.json.00000.part",
+          "size": 33554432,
+          "sha256": "b6533d5832052a09f87ae17acd9299ff786e53f32c011afa804e606edfae9e54"
+        },
+        {
+          "name": "names.json.00001.part",
+          "size": 16270064,
+          "sha256": "d8fa0171a9020fe518289bd16c4f4cf3347d67256fc6406105c3bd46984f7299"
+        }
+      ]
+    },
+    "brawlers.json": {
+      "codec": "gzip",
+      "size": 2039,
+      "parts": [
+        {
+          "name": "brawlers.json.00000.part",
+          "size": 733,
+          "sha256": "2b54ebdaf2e3f1db270333af748d095ed9f28f9bed4d0f39f891361bc31853a5"
+        }
+      ]
+    }
+  }
+}
