@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "files": {
+    "battles.jsonl.gz": {
+      "codec": "identity",
+      "size": 318173616,
+      "parts": [
+        {
+          "name": "battles.jsonl.gz.00000.part",
+          "size": 33554432,
+          "sha256": "38c75e8280122f4dfcf269c02f889c92d76be8bb55954dfa68eacc25f8eda6de"
+        },
+        {
+          "name": "battles.jsonl.gz.00001.part",
+          "size": 33554432,
+          "sha256": "010cc6b0dd66dc4e86dcda7db785c134457596b1702944de83293d2578f190ff"
+        },
+        {
+          "name": "battles.jsonl.gz.00002.part",
+          "size": 33554432,
+          "sha256": "a3517e31f181015ab536bbe6984f615d24a805d0933754c6d51ad08a09dd713d"
+        },
+        {
+          "name": "battles.jsonl.gz.00003.part",
+          "size": 33554432,
+          "sha256": "8eb387c3a7e81568204373a57189375a36c84a411400de8c7b652f01d55cb382"
+        },
+        {
+          "name": "battles.jsonl.gz.00004.part",
+          "size": 33554432,
+          "sha256": "5c5002b1bca10afd6478509a7d626ddb4b10f6ae2253b0247c0cc59916539cc7"
+        },
+        {
+          "name": "battles.jsonl.gz.00005.part",
+          "size": 33554432,
+          "sha256": "dd3f0602b2b4a230b7e896ac92a351e93fb2a968deae98829a76c74af4493510"
+        },
+        {
+          "name": "battles.jsonl.gz.00006.part",
+          "size": 33554432,
+          "sha256": "423edfa03a69a603cfdcdd1e4c0a7f4a84529c8961d4dbd0a5a35095857df229"
+        },
+        {
+          "name": "battles.jsonl.gz.00007.part",
+          "size": 33554432,
+          "sha256": "3e797f2053e4c47cc7efde2affbe0f566e84dc2f404b34510c8c818667764e3d"
+        },
+        {
+          "name": "battles.jsonl.gz.00008.part",
+          "size": 33554432,
+          "sha256": "31117dbecffc0476b316df8c0e1c2f650eae554d886083b512421dd1c7a25ae7"
+        },
+        {
+          "name": "battles.jsonl.gz.00009.part",
+          "size": 16183728,
+          "sha256": "309c7fdcca85152bef62d5d457239b212191980d3816ffe7d48c57d5b2ed79a0"
+        }
+      ]
+    },
+    "names.json": {
+      "codec": "gzip",
+      "size": 99698025,
+      "parts": [
+        {
+          "name": "names.json.00000.part",
+          "size": 33554432,
+          "sha256": "ce4c533b398a9db03b29db8893c742a44a09b88300e3cf6cf6985e4b2ad4c2a2"
+        },
+        {
+          "name": "names.json.00001.part",
+          "size": 24414024,
+          "sha256": "ad4980a52503088eaebb5818576d7a022b725137cc205440a31dd5b44dc0e9a0"
+        }
+      ]
+    },
+    "brawlers.json": {
+      "codec": "gzip",
+      "size": 2101,
+      "parts": [
+        {
+          "name": "brawlers.json.00000.part",
+          "size": 755,
+          "sha256": "5b66dac34700e44dcec5cfc6c36ab2ea838f68d2f5a2d3b1e4fe456a9f4d786f"
+        }
+      ]
+    }
+  }
+}
