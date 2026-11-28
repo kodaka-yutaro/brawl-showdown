@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "files": {
+    "battles.jsonl.gz": {
+      "codec": "identity",
+      "size": 390611904,
+      "parts": [
+        {
+          "name": "battles.jsonl.gz.00000.part",
+          "size": 33554432,
+          "sha256": "a086e3a124c67c0bedbce1a0b7988fd83a6193b64294cf107f272a75eae2c5da"
+        },
+        {
+          "name": "battles.jsonl.gz.00001.part",
+          "size": 33554432,
+          "sha256": "aa5d1426927414dab1b78e829fdc6e5011ba98e208c24eaf04dcccb9889d043b"
+        },
+        {
+          "name": "battles.jsonl.gz.00002.part",
+          "size": 33554432,
+          "sha256": "c79d41d1316463fe4e5e0a5977901f5263ff6888e2f53d640d408f0416c31764"
+        },
+        {
+          "name": "battles.jsonl.gz.00003.part",
+          "size": 33554432,
+          "sha256": "40df0b31c5e4e6022cae23b2e08475f737dbc5c56b0c82c511951e4c82a84135"
+        },
+        {
+          "name": "battles.jsonl.gz.00004.part",
+          "size": 33554432,
+          "sha256": "f8b9419e7f26d823def0338060b0bbdc38cec8eb3b42ce5f10e467e05a1e725b"
+        },
+        {
+          "name": "battles.jsonl.gz.00005.part",
+          "size": 33554432,
+          "sha256": "aaa975e8e68ae5fd91ce0532759ffb88985b5f5a665f13ae6eb7be675b29cd17"
+        },
+        {
+          "name": "battles.jsonl.gz.00006.part",
+          "size": 33554432,
+          "sha256": "987c45bb07d34e8be6c27e66d485a5279c4b3808d6debe8d4995ab1abf4e76ca"
+        },
+        {
+          "name": "battles.jsonl.gz.00007.part",
+          "size": 33554432,
+          "sha256": "46587fe2b01e3c595830b0dcffb5dbb28b7580341d84be9a37ae24d28ae64d63"
+        },
+        {
+          "name": "battles.jsonl.gz.00008.part",
+          "size": 33554432,
+          "sha256": "b6d7ebfb2300f8d960568d67d05de2d33d66e3599fb1556cb47975c4df74f853"
+        },
+        {
+          "name": "battles.jsonl.gz.00009.part",
+          "size": 33554432,
+          "sha256": "99d65afb06608e2120e68b0242506c62ce352335494e88cd439bafeefa5b1ff4"
+        },
+        {
+          "name": "battles.jsonl.gz.00010.part",
+          "size": 33554432,
+          "sha256": "45eb525effc23c1d0a710d7cb815e38126abbd37d3c5ae3df7cb0863379f9111"
+        },
+        {
+          "name": "battles.jsonl.gz.00011.part",
+          "size": 21513152,
+          "sha256": "95e04c903e31df9bd528775bd5026316be5065416dc7cbc874a05a5c8efd6e8f"
+        }
+      ]
+    },
+    "names.json": {
+      "codec": "gzip",
+      "size": 120620267,
+      "parts": [
+        {
+          "name": "names.json.00000.part",
+          "size": 33554432,
+          "sha256": "965d5082796d5746a3349be447a188ce3442fdb47542b8389ed74227713b9a92"
+        },
+        {
+          "name": "names.json.00001.part",
+          "size": 33554432,
+          "sha256": "713f640709a72e2124380aa104de7c14956e8fc0e23b310ff610125dfcce6285"
+        },
+        {
+          "name": "names.json.00002.part",
+          "size": 3070831,
+          "sha256": "e5f378ea76fa390e0381007efec7c492c97891c45a31b7d4aa40fdc2b2d87cd6"
+        }
+      ]
+    },
+    "brawlers.json": {
+      "codec": "gzip",
+      "size": 2101,
+      "parts": [
+        {
+          "name": "brawlers.json.00000.part",
+          "size": 755,
+          "sha256": "5b66dac34700e44dcec5cfc6c36ab2ea838f68d2f5a2d3b1e4fe456a9f4d786f"
+        }
+      ]
+    }
+  }
+}
